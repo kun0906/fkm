@@ -18,6 +18,7 @@ class KMeans:
             reassign_after=None,
             verbose=False,
             random_state=42,
+            params = {},
     ):
         self.n_clusters = n_clusters
         self.init_centroids = init_centroids
@@ -31,6 +32,7 @@ class KMeans:
         self.reassign_min = reassign_min
         self.reassign_after = reassign_after
         self.random_state = random_state
+        self.params = params
 
     def do_init_centroids(self, X=None):
         if isinstance(self.init_centroids, str):

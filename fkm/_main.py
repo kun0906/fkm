@@ -50,6 +50,11 @@ def save_history2txt(seed_history, out_file='.txt'):
         res = format(seed_history)
         f.write(res)
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 @timer
 def run_clustering_federated(params, KMeansFederated, verbose=5):
@@ -79,7 +84,8 @@ def run_clustering_federated(params, KMeansFederated, verbose=5):
     N_CLUSTERS = params['n_clusters']
     LIMIT_CSV = None
     EPOCHS = params['client_epochs']
-    ROUNDS = 300
+    ROUNDS = 500
+    TOLERANCE = 1e-10   # 1e-4, 1e-6
     LR = None  # 0.5
     LR_AD = None
     EPOCH_LR = None  # 0.5
@@ -111,8 +117,8 @@ def run_clustering_federated(params, KMeansFederated, verbose=5):
         )
         n_clients = len(raw_x['train']) if params['is_federated'] else 0
         out_dir_i = os.path.join(OUT_DIR, f'Clients_{n_clients}')
-        if os.path.exists(out_dir_i):
-            shutil.rmtree(out_dir_i, ignore_errors=True)
+        # if os.path.exists(out_dir_i):
+        #     shutil.rmtree(out_dir_i, ignore_errors=True)
         if not os.path.exists(out_dir_i):
             os.makedirs(out_dir_i)
 
@@ -135,7 +141,8 @@ def run_clustering_federated(params, KMeansFederated, verbose=5):
                       f'cluster_size: {sorted(Counter(y_tmp).items(), key=lambda kv: kv[0], reverse=False)}')
 
         # obtain the true centroids given raw_x and raw_y
-        true_centroids = obtain_true_centroids(raw_x, raw_y, splits)
+        true_centroids = obtain_true_centroids(raw_x, raw_y, splits, params)
+
         if verbose:
             # print true centroids
             for split in splits:
@@ -169,7 +176,9 @@ def run_clustering_federated(params, KMeansFederated, verbose=5):
                     max_iter=ROUNDS,
                     reassign_min=REASSIGN[0],
                     reassign_after=REASSIGN[1],
-                    verbose=verbose
+                    verbose=verbose,
+                    tol= TOLERANCE,
+                    params=params
                 )
             else:
                 kmeans = KMeansFederated(
@@ -188,7 +197,9 @@ def run_clustering_federated(params, KMeansFederated, verbose=5):
                     momentum=MOMENTUM,
                     reassign_min=REASSIGN[0],
                     reassign_after=REASSIGN[1],
-                    verbose=verbose
+                    verbose=verbose,
+                    tol=TOLERANCE,
+                    params = params
                 )
             if verbose > 5:
                 # print all kmeans's variables.
@@ -249,7 +260,11 @@ def run_clustering_federated(params, KMeansFederated, verbose=5):
         results_avg = {}
         for split in splits:
             metric_names = history['results'][0]['scores'][split].keys()
-            results_avg[split] = {}
+            if split == 'train':
+                training_iterations = [vs['training_iterations'] for vs in history['results']]
+                results_avg[split] = {'Iterations': (np.mean(training_iterations), np.std(training_iterations))}
+            else:
+                results_avg[split] = {'Iterations': ('', '')}
             for k in metric_names:
                 value = [vs['scores'][split][k] for vs in history['results']]
                 try:
@@ -282,7 +297,7 @@ def run_clustering_federated(params, KMeansFederated, verbose=5):
                 plot_metric_over_time_femnist(history, out_dir=f'{out_dir_i}/over_time',
                                               title=title + f'. {n_clients} Clients', fig_name=f'M={n_clients}',
                                               params=params, is_show=is_show)
-            elif params['p0'] == '2GAUSSIANS':
+            elif params['p0'] in ['2GAUSSIANS','3GAUSSIANS', '5GAUSSIANS' ]:
                 plot_metric_over_time_2gaussian(history, out_dir=f'{out_dir_i}/over_time',
                                                 title=title + f'. {n_clients} Clients', fig_name=f'M={n_clients}',
                                                 params=params, is_show=is_show)
@@ -310,6 +325,9 @@ def run_clustering_federated(params, KMeansFederated, verbose=5):
         file.write(json.dumps(stats))  # use `json.loads` to do the reverse
 
     dump(histories, out_file=out_file + '-histories.dat')
+    with open(out_file + '-histories.txt', 'w') as file:
+        file.write(json.dumps(histories, cls=NumpyEncoder))  # use `json.loads` to do the reverse
+
 
     # will be needed.
     # figs2movie(fig_paths, out_file=out_file + '.mp4')

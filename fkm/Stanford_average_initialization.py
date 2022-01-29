@@ -76,6 +76,7 @@ class KMeansFederated(KMeans):
             adaptive_lr=None,
             momentum=None,
             epoch_lr=1.0,
+            params = {},
     ):
         super().__init__(
             n_clusters=n_clusters,
@@ -101,6 +102,7 @@ class KMeansFederated(KMeans):
         self.client_init_centroids = client_init_centroids
         self.true_centroids = true_centroids
         self.random_state = random_state
+        self.params = params
 
     def do_federated_round_single_step(self, clients_in_round, centroids):
         # print(len(clients_in_round))
@@ -319,12 +321,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Description of your program')
     # parser.add_argument('-p', '--py_name', help='python file name', required=True)
     parser.add_argument('-S', '--dataset', help='dataset', default='2GAUSSIANS')
-    parser.add_argument('-T', '--data_details', help='data details', default='1client_0.7cluster1_0.3cluster2')
-    parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_average-Client_true')
+    parser.add_argument('-T', '--data_details', help='data details', default='1client_xlt0_2')
+    parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_average-Client_kmeans++')
     # args = vars(parser.parse_args())
     args = parser.parse_args()
     pprint(args)
-    params = get_experiment_params(p0=args.dataset, p1=args.data_details, p2=args.algorithm)
+    p3 = __file__.split('/')[-1].split('.')[0]
+    params = get_experiment_params(p0=args.dataset, p1=args.data_details, p2=args.algorithm, p3=p3)
     pprint(params)
     try:
         run_clustering_federated(

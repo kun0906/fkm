@@ -48,8 +48,8 @@ class KMeansFederated(KMeans):
     def __init__(
             self,
             n_clusters,
-            server_init_centroids='greedy',
-            client_init_centroids='random',
+            server_init_centroids='random',
+            client_init_centroids='None',
             true_centroids=None,
             max_iter=300,
             tol=1e-4,
@@ -66,6 +66,7 @@ class KMeansFederated(KMeans):
             adaptive_lr=None,
             momentum=None,
             epoch_lr=1.0,
+            params={}
     ):
         super().__init__(
             n_clusters=n_clusters,
@@ -91,6 +92,7 @@ class KMeansFederated(KMeans):
         self.client_init_centroids = client_init_centroids
         self.true_centroids = true_centroids
         self.random_state = random_state
+        self.params = params
 
     # def do_federated_round_single_step(self, clients_in_round, centroids):
     #     # print(len(clients_in_round))
@@ -173,6 +175,13 @@ class KMeansFederated(KMeans):
             for i in range(self.n_clusters):
                 # changing random_state to get different centroid for each cluster
                 r = np.random.RandomState((i+1) * max(1, self.random_state))
+                # if '2GAUSSIANS' in self.params['p0']:
+                #     # mu +/- 3* sigma = -1 +/- (3 * 1)  = [-4, 4]
+                #     a = -4
+                #     b = 4
+                #     centroids[i] = a + (b - a) * r.rand(self.dim)  # range [a, b]
+                # else:
+                #     centroids[i] = r.rand(1, self.dim) # random samples from a uniform distribution over ``[0, 1)``.
                 centroids[i] = r.rand(1, self.dim)
             self.initial_centroids = centroids
         n_consecutive = 0
@@ -309,17 +318,18 @@ if __name__ == '__main__':
     # parser.add_argument('-p', '--py_name', help='python file name', required=True)
     parser.add_argument('-S', '--dataset', help='dataset', default='2GAUSSIANS')
     parser.add_argument('-T', '--data_details', help='data details', default='1client_0.7cluster1_0.3cluster2')
-    parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_true')
+    parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_random')
     # args = vars(parser.parse_args())
     args = parser.parse_args()
     print(args)
-    params = get_experiment_params(p0=args.dataset, p1=args.data_details, p2=args.algorithm)
+    p3 = __file__.split('/')[-1].split('.')[0]
+    params = get_experiment_params(p0=args.dataset, p1=args.data_details, p2=args.algorithm, p3=p3)
     pprint(params)
     try:
         _main.run_clustering_federated(
             params,
             KMeansFederated,
-            verbose=10,
+            verbose=15,
         )
     except Exception as e:
         print(f'Error: {e}')

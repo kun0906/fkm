@@ -15,7 +15,7 @@ import numpy as np
 from sklearn.cluster import kmeans_plusplus
 
 from fkm import _main
-from fkm.clustering.greedy_initialization import greedily_initialize, distance_sq
+from fkm.clustering.greedy_initialization import greedily_initialize
 from fkm.clustering.my_kmeans import KMeans
 from fkm.experiment_cases import get_experiment_params
 from fkm.utils.utils_func import random_initialize_centroids
@@ -26,7 +26,7 @@ def compute_step_for_client(client_data, centroids):
     # compute distances
     # computationally efficient
     differences = np.expand_dims(client_data, axis=1) - np.expand_dims(centroids, axis=0)
-    sq_dist = np.sum(np.square(differences), axis=2)  # n x k
+    sq_dist = np.sum(np.square(differences), axis=2)
 
     # memory efficient
     # sq_dist = np.zeros((client_data.shape[0], self.n_clusters))
@@ -46,6 +46,7 @@ def compute_step_for_client(client_data, centroids):
             centroid_updates[i, :] = np.sum(client_data[mask] - centroids[i], axis=0)
     return centroid_updates, counts
 
+
 def compute_client_params(X, centroids):
     differences = np.expand_dims(X, axis=1) - np.expand_dims(centroids, axis=0)
     sq_dist = np.sum(np.square(differences), axis=2)
@@ -63,8 +64,7 @@ def compute_client_params(X, centroids):
         mask = np.equal(labels, i)
         ni = np.sum(mask)
         if ni:
-            # avg_dist = np.sqrt(np.sum(np.square(X[mask] - centroids[i]))) / ni
-            avg_dist = np.sum(np.square(X[mask] - centroids[i]))/ ni
+            avg_dist = np.sqrt(np.sum(np.square(X[mask] - centroids[i]))) / ni
         else:
             avg_dist = 0.0
         cluster_sizes.append(ni)
@@ -95,6 +95,52 @@ def update_server_centroids(KM_centroids, KM_ns, KM_ds, centroids, alpha):
         new_centroids[i] = centroids[i] + alpha * diff
 
     return new_centroids
+#
+# def server_update(clients_clusters, server_centroids, M, K, D):
+#
+#     centroids = np.zeros((K, D))
+#     # for each server centroid k = 0, 1, .. K-1, compute the mean of all clients' centroids[k]
+#     for k in range(K):
+#         # find the best_centroid
+#         best_L = np.inf
+#         best_centroid = 0
+#         for m in range(0, M+1):
+#             if m == M: # includes the average centroid
+#                 mu = np.mean([clients_clusters[m_]['centroids'][k] for m_ in range(M)])  # u_0
+#                 L = mu
+#             else:
+#                 mu = clients_clusters[m]['centroids'][k]
+#                 L = 0
+#                 for j in range(M):
+#                     L += clients_clusters[m]['sizes'][k] * (
+#                             np.sqrt(np.sum(np.square(mu - clients_clusters[j]['centroids'][k])))
+#                                                           + clients_clusters[j]['dists'][k]**2)
+#             if L < best_L:
+#                 best_L = L
+#                 # best_centroid = np.mean([clients_clusters[m_]['centroids'][k] for m_ in range(M)])
+#                 best_centroid = mu
+#         centroids[k] = best_centroid
+#
+#     return centroids-server_centroids, centroids
+#
+
+
+
+def server_update(clients_clusters, server_centroids, M, K, D):
+
+    centroids = np.zeros((K, D))
+    for k in range(K):
+        # N = sum(clients_clusters[m]['sizes'][k] for m in range(M))
+        # centroid = [clients_clusters[m]['centroids'][k] * clients_clusters[m]['sizes']/N for m in range(M)]
+        N = 0
+        for m in range(M):
+            N += clients_clusters[m]['sizes'][k]
+            centroids[k] += clients_clusters[m]['centroids'][k] * clients_clusters[m]['sizes']
+        centroids[k] = centroids[k]/N
+
+    return centroids-server_centroids, centroids
+
+
 
 
 class KMeansFederated(KMeans):
@@ -152,7 +198,9 @@ class KMeansFederated(KMeans):
         counts = np.zeros(self.n_clusters)
         KM_params = {'centroids': [], 'cluster_sizes': [], 'avg_dists': []}
         client_centroids_avg = np.zeros((self.n_clusters, self.dim))
+        clients_clusters = []
         for i, client_data in enumerate(clients_in_round):
+            client_clusters = {'centroids': None, 'size': None, 'dist': None}
             if self.use_client_init_centroids:
                 # added by kun
                 # self.init_centroids = 'kmeans++'
@@ -197,16 +245,18 @@ class KMeansFederated(KMeans):
                 client_updates_sum = (client_centroids - centroids) * np.expand_dims(client_counts, axis=1)
                 updates_sum += client_updates_sum
                 counts += client_counts
+            # if iteration == 0:
+            # compute client's params (such as centroids, cluster_sizes, and avg_dists)
+            client_centroids, client_cluster_sizes, client_avg_dists = compute_client_params(client_data,
+                                                                                             client_centroids)
+            # dists = [(client_cluster_sizes[idx] * client_avg_dists[idx])**2 for idx in range(self.n_clusters)]
+            client_clusters = {'centroids': client_centroids, 'sizes': client_cluster_sizes, 'dists': client_avg_dists}
+            # client_clusters_sizes == client_counts when iteration > 0
+            KM_params['centroids'].extend(list(client_centroids))
+            KM_params['cluster_sizes'].extend(list(client_cluster_sizes))
+            KM_params['avg_dists'].extend(list(client_avg_dists))
 
-            if iteration == 0:
-                # compute client's params (such as centroids, cluster_sizes, and avg_dists)
-                client_centroids, client_cluster_sizes, client_avg_dists = compute_client_params(client_data,
-                                                                                                 client_centroids)
-                # client_clusters_sizes == client_counts when iteration > 0
-                KM_params['centroids'].extend(list(client_centroids))
-                KM_params['cluster_sizes'].extend(list(client_cluster_sizes))
-                KM_params['avg_dists'].extend(list(client_avg_dists))
-
+            clients_clusters.append(client_clusters)
             if self.verbose > 5 and iteration > 0:
                 print("client_{}, client_counts: {}; client_updates_sum: {}, each_update: {}".format(i, client_counts,
                                                                                                      client_updates_sum,
@@ -221,7 +271,7 @@ class KMeansFederated(KMeans):
             KM_params['cluster_sizes'] = np.asarray(KM_params['cluster_sizes'])
             KM_params['avg_dists'] = np.asarray(KM_params['avg_dists'])
 
-        return updates_sum, counts, KM_params
+        return updates_sum, counts, KM_params, clients_clusters
 
     def fit(self, X_dict, y_dict, splits=None, record_at=None):
         X = X_dict['train']
@@ -253,7 +303,7 @@ class KMeansFederated(KMeans):
             #     clients_in_round=clients_in_round,
             #     centroids=centroids,
             # )
-            updates_sum, counts, KM_params = self.do_federated_round(
+            updates_sum, counts, KM_params, clients_clusters = self.do_federated_round(
                 clients_in_round=clients_in_round,
                 centroids=centroids, iteration=iteration,
             )
@@ -295,6 +345,8 @@ class KMeansFederated(KMeans):
             # update server's params
             overall_counts += counts
             centroids_update = updates_sum / np.expand_dims(np.maximum(counts, np.ones_like(counts)), axis=1)
+            centroids_update2, _  = server_update(clients_clusters, centroids, self.num_clients, self.n_clusters, self.dim)
+            print(centroids_update2, np.sum(centroids_update - centroids_update2))
 
             # if self.adaptive_lr:
             #     rel_counts = counts / np.maximum(overall_counts, np.ones_like(overall_counts))
@@ -378,9 +430,9 @@ if __name__ == "__main__":
     print(__file__)
     parser = argparse.ArgumentParser(description='Description of your program')
     # parser.add_argument('-p', '--py_name', help='python file name', required=True)
-    parser.add_argument('-S', '--dataset', help='dataset', default='2GAUSSIANS')
-    parser.add_argument('-T', '--data_details', help='data details', default='1client_xlt0_2')
-    parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_greedy-Client_random')
+    parser.add_argument('-S', '--dataset', help='dataset', default='2MOONS')
+    parser.add_argument('-T', '--data_details', help='data details', default='2moons')
+    parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_greedy-Client_true')
     # args = vars(parser.parse_args())
     args = parser.parse_args()
     print(args)

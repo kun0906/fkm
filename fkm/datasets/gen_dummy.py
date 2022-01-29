@@ -10,9 +10,10 @@ from sklearn.datasets import make_blobs
 
 from fkm.datasets.femnist import femnist_1client_1writer_multidigits, femnist_1client_multiwriters_multidigits, \
     femnist_1client_multiwriters_1digit
-from fkm.datasets.gaussian2 import gaussian2_1client_1cluster, gaussian2_1client_7cluster1_3cluster2, \
-    gaussian2_1client_ylt0, gaussian2_1client_xlt0, gaussian2_1client_1cluster_diff_sigma, \
-    gaussian2_1client_1cluster_diff_sigma_n
+from fkm.datasets.gaussian2 import *
+from fkm.datasets.gaussian3 import *
+from fkm.datasets.gaussian5 import gaussian5_5clients_5clusters
+from fkm.datasets.moon import moons_dataset
 from fkm.utils.utils_func import timer
 
 
@@ -359,7 +360,6 @@ def load_federated(limit_csv=None, verbose=False, seed=None, clusters=None, n_cl
             return femnist_1client_multiwriters_multidigits(params, random_state=seed)
         elif params['p1'] == '1client_multiwriters_1digit':
             return femnist_1client_multiwriters_1digit(params, random_state=seed)
-
     elif params['p0'] == '2GAUSSIANS':
         # here is only for the same sigma. for different sigmas, not implement yet.
         if params['p1'] == '1client_1cluster':
@@ -401,6 +401,53 @@ def load_federated(limit_csv=None, verbose=False, seed=None, clusters=None, n_cl
             Parameters
             """
             return gaussian2_1client_1cluster_diff_sigma_n(params, random_state=seed)
+        elif params['p1'] == '1client_xlt0_2':
+            """
+            # 2 clusters ((-1,0), (1, 0)) in R^2, each client has one cluster. 2 clusters has no overlaps.
+             # lt0 means all 'x's are larger than 0
+            # 2 clusters in R^2
+            # 1) client 1 has all data (x>0) from cluster1 and cluster2
+            # 1) client 2 has all data (x<=0) from cluster1 and cluster2
+            Parameters
+            """
+            return gaussian2_1client_xlt0_2(params, random_state=seed)
+
+    elif params['p0'] == '3GAUSSIANS':
+        # here is only for the same sigma. for different sigmas, not implement yet.
+        if params['p1'] == '1client_1cluster':
+            return gaussian3_1client_1cluster(params, random_state=seed)
+        elif params['p1'] == '1client_0.7cluster1_0.3cluster2':
+            return gaussian3_1client_7cluster1_3cluster2(params, random_state=seed)
+        elif params['p1'] == '1client_ylt0':
+            return gaussian3_1client_ylt0(params, random_state=seed)
+        elif params['p1'] == '1client_xlt0':
+            return gaussian3_1client_xlt0(params, random_state=seed)
+        elif params['p1'] == '1client_1cluster_diff_sigma':
+            return gaussian3_1client_1cluster_diff_sigma(params, random_state=seed)
+        elif params['p1'] == '1client_1cluster_diff_sigma_n':
+            return gaussian3_1client_1cluster_diff_sigma_n(params, random_state=seed)
+        elif params['p1'] == '1client_xlt0_2':
+            return gaussian3_1client_xlt0_2(params, random_state=seed)
+    elif params['p0'] == '5GAUSSIANS':
+        # here is only for the same sigma. for different sigmas, not implement yet.
+        if params['p1'] == '5clients_5clusters':
+            return gaussian5_5clients_5clusters(params, random_state=seed)
+        elif params['p1'] == '5clients_4clusters':
+            return gaussian5_5clients_5clusters(params, random_state=seed)
+        elif params['p1'] == '5clients_3clusters':
+            return gaussian5_5clients_5clusters(params, random_state=seed)
+
+    elif params['p0'] == '2MOONS':
+        if params['p1'] == '2moons':
+            """
+            # 2 clusters ((-1,0), (1, 0)) in R^2, each client has one cluster. 2 clusters has no overlaps.
+             # lt0 means all 'x's are larger than 0
+            # 2 clusters in R^2
+            # 1) client 1 has all data (x>0) from cluster1 and cluster2
+            # 1) client 2 has all data (x<=0) from cluster1 and cluster2
+            Parameters
+            """
+            return moons_dataset(params, random_state=seed)
         else:
             # TODO : different sigmas
             pass

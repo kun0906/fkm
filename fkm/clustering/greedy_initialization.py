@@ -45,36 +45,36 @@ def pick_first_centorid(KM_centroids, KM_ns, KM_ds, D):
 
     return idx
 
-
-def pick_first_centorid2(KM_centroids, KM_ns, KM_ds):
-    d = np.inf
-    idx = None
-    for i, y_i in enumerate(KM_centroids):
-        # d_i = KM_ns[i] * KM_ds[i]  # n_i * d_ii
-        d_i = 0
-        for j, y_j in enumerate(KM_centroids):
-            if i == j: continue
-            d_i += KM_ns[j] * distance_sq(y_i, y_j)  # n_j * d_ij
-        if d_i < d:
-            d = d_i
-            idx = i
-
-    return idx
-
-
-def pick_first_centorid3(KM_centroids, KM_ns, KM_ds):
-    d = np.inf
-    idx = None
-    alpha = 0.3
-    for i, y_i in enumerate(KM_centroids):
-        d_i = KM_ns[i] * KM_ds[i]  # n_i * d_ii
-        for j, y_j in enumerate(KM_centroids):
-            if i == j: continue
-            d_i += KM_ns[j] * distance_sq(y_i, y_j) + alpha * KM_ds[j]  # n_j * d_ij + alpha * d_jj
-        if d_i < d:
-            d = d_i
-            idx = i
-    return idx
+#
+# def pick_first_centorid2(KM_centroids, KM_ns, KM_ds):
+#     d = np.inf
+#     idx = None
+#     for i, y_i in enumerate(KM_centroids):
+#         # d_i = KM_ns[i] * KM_ds[i]  # n_i * d_ii
+#         d_i = 0
+#         for j, y_j in enumerate(KM_centroids):
+#             if i == j: continue
+#             d_i += KM_ns[j] * distance_sq(y_i, y_j)  # n_j * d_ij
+#         if d_i < d:
+#             d = d_i
+#             idx = i
+#
+#     return idx
+#
+#
+# def pick_first_centorid3(KM_centroids, KM_ns, KM_ds):
+#     d = np.inf
+#     idx = None
+#     alpha = 0.3
+#     for i, y_i in enumerate(KM_centroids):
+#         d_i = KM_ns[i] * KM_ds[i]  # n_i * d_ii
+#         for j, y_j in enumerate(KM_centroids):
+#             if i == j: continue
+#             d_i += KM_ns[j] * distance_sq(y_i, y_j) + alpha * KM_ds[j]  # n_j * d_ij + alpha * d_jj
+#         if d_i < d:
+#             d = d_i
+#             idx = i
+#     return idx
 
 @timer
 def greedily_initialize(KM_centroids, KM_ns, KM_ds, n_clusters):

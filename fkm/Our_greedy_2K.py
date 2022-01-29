@@ -70,6 +70,11 @@ def compute_client_params(X, centroids):
         cluster_sizes.append(ni)
         cluster_avg_dists.append(avg_dist)
 
+    # add the center of input data X
+    center = np.mean(X, axis=0).reshape(1, -1)
+    centroids = np.concatenate([centroids, center], axis=0)
+    cluster_sizes.append(len(X))
+    cluster_avg_dists.append(np.sum(np.square(X - center))/ len(X))
     return centroids, cluster_sizes, cluster_avg_dists
 
 
@@ -159,19 +164,19 @@ class KMeansFederated(KMeans):
                 # self.init_centroids = ''
                 if self.client_init_centroids == 'kmeans++':
                     # Calculate seeds from kmeans++
-                    client_centroids, indices = kmeans_plusplus(client_data, n_clusters=self.n_clusters,
+                    client_centroids, indices = kmeans_plusplus(client_data, n_clusters=2*self.n_clusters,
                                                                 random_state=self.random_state)
                 elif self.client_init_centroids == 'true':  # true centroids
                     client_centroids = self.true_centroids['train']
                 else:
                     # client_centroids = randomly_init_centroid(0, self.n_clusters + 1, self.dim, self.n_clusters,
                     #                                           self.random_state)
-                    client_centroids = random_initialize_centroids(client_data, self.n_clusters,
+                    client_centroids = random_initialize_centroids(client_data, 2*self.n_clusters,
                                                                    self.random_state)
             else:
                 client_centroids = centroids
             if iteration == 0:
-                client_centroids_avg += client_centroids
+                # client_centroids_avg += client_centroids
                 updates_sum = np.zeros((self.n_clusters, self.dim))
                 counts = np.zeros(self.n_clusters)
                 client_updates_sum = np.zeros((self.n_clusters, self.dim))

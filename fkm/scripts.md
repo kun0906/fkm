@@ -14,6 +14,7 @@
     
     # copy remote to local 
     rsync -azP ky8517@tiger.princeton.edu:/scratch/gpfs/ky8517/fkm/fkm/results-repeats_100 ~/Downloads/
+    rsync -azP ky8517@tiger.princeton.edu:/scratch/gpfs/ky8517/fkm/fkm/2GAUSSIANS-Client_epochs_5.xlsx ~/Downloads/
     
     ssh ky8517@tiger.princeton.edu 'cd /scratch/gpfs/ky8517/fkm/fkm/ && tar -cf - -C results-repeats_100' | tar -xf - -C ~/Downloads
     https://askubuntu.com/questions/1236768/how-to-compress-and-download-directory-from-remote-to-local

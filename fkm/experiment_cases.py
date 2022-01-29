@@ -2,7 +2,7 @@ import os
 
 
 def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_multidigits',
-                          p2='Centralized_random'):
+                          p2='Centralized_random', p3='py_name', client_epochs=1):
     """
 
     Parameters
@@ -11,16 +11,16 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
     p0
     p1
     p2
+    client_epochs:
 
     Returns
     -------
 
     """
-    repeats = 30 if '2GAUSSIANS' == p0 else 10
-    client_epochs = 5
-    out_dir = os.path.join(out_dir, f'repeats_{repeats}-client_epochs_{client_epochs}')
+    repeats = 50 if 'GAUSSIANS' in p0 else 10
+    out_dir = os.path.join(out_dir, f'repeats_{repeats}-client_epochs_{client_epochs}-tol_1e-10', p3)
     ##############################################################################################################
-    ### p0 = 'FEMNIST'
+    # p0 = 'FEMNIST'
     if p0 == 'FEMNIST':
         if p1 == '1client_1writer_multidigits':
             # each client only includes one writer, and each writer includes 10 digits.
@@ -69,7 +69,8 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             n_clients = 10
             data_name = f'{DATASET}-Writers_{writer_ratio}-Testset_{data_ratio_per_digit}-Clusters_{n_clusters}-Clients_{n_clients}-{p1}'
         else:
-            return {}
+            msg = p1
+            raise NotImplementedError(msg)
 
     elif p0 == '2GAUSSIANS':
         writer_ratio = None
@@ -156,8 +157,25 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
         elif p1 == '1client_1cluster_diff_sigma_n':
             """ Dataset: 
                 1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
-                    cluster 1: sigma = 0.5 and n_points = 5000
+                    cluster 1: sigma = 0.1 and n_points = 5000
                     cluster 2: sigma = 1    and n_points = 15000
+                2) Each client only includes one cluster, i.e., we have 2 clients.
+                3) For each client, we choose 70% data points for training and 30% data points for testing. 
+
+            """
+            DATASET = '2GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 2
+            n_clients = 2
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+
+        elif p1 == '1client_xlt0_2':
+            """ Dataset: 
+                1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
+                    cluster 1: sigma = 0.01 and n_points = 5000
+                    cluster 2: sigma = 0.01   and n_points = 15000
                 2) Each client only includes one cluster, i.e., we have 2 clients.
                 3) For each client, we choose 70% data points for training and 30% data points for testing. 
 
@@ -171,11 +189,190 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
         else:
             return {}
+
+    elif p0 == '3GAUSSIANS':
+        writer_ratio = None
+        data_ratio_per_writer = None
+        data_ratio_per_digit = None
+
+        if p1 == '1client_1cluster':
+            """ Dataset: 
+                1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
+                2) Each client only includes one cluster, i.e., we have 2 clients.
+                3) For each client, we choose 70% data points for training and 30% data points for testing. 
+
+            """
+            DATASET = '3GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 3
+            n_clients = 3
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        elif p1 == '1client_0.7cluster1_0.3cluster2':
+
+            """ Dataset: 
+                        1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points. 
+                        2) client1 has 70% data from cluster 1 and 30% data from cluster2
+                        3) client2 has 30% data from cluster 1 and 70% data from cluster2
+                    """
+            DATASET = '3GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 3
+            n_clients = 3
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+
+        elif p1 == '1client_ylt0':
+            # lt0 means all 'y's are larger than 0
+            """ Dataset: 
+                            1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
+                            2) client 1 has all data (y>0) from cluster1 and cluster2
+                            3) client 2 has all data (y<=0) from cluster1 and cluster2
+                            4) For each client, we choose 70% data points for training and 30% data points for testing. 
+
+                        """
+            DATASET = '3GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 3
+            n_clients = 3
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        elif p1 == '1client_xlt0':
+            # lt0 means all 'x's are larger than 0
+            """ Dataset: 
+                            1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
+                            2) client 1 has all data (x>0) from cluster1 and cluster2
+                            3) client 2 has all data (x<=0) from cluster1 and cluster2
+                            4) For each client, we choose 70% data points for training and 30% data points for testing. 
+
+                        """
+            DATASET = '3GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 3
+            n_clients = 3
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        elif p1 == '1client_1cluster_diff_sigma':
+            """ Dataset: 
+                1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
+                    cluster 1: sigma = 0.5
+                    cluster 2: sigma = 1
+                2) Each client only includes one cluster, i.e., we have 2 clients.
+                3) For each client, we choose 70% data points for training and 30% data points for testing. 
+
+            """
+            DATASET = '3GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 3
+            n_clients = 3
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        elif p1 == '1client_1cluster_diff_sigma_n':
+            """ Dataset: 
+                1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
+                    cluster 1: sigma = 0.1 and n_points = 5000
+                    cluster 2: sigma = 1    and n_points = 15000
+                2) Each client only includes one cluster, i.e., we have 2 clients.
+                3) For each client, we choose 70% data points for training and 30% data points for testing. 
+
+            """
+            DATASET = '3GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 3
+            n_clients = 3
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+
+        elif p1 == '1client_xlt0_2':
+            """ Dataset: 
+                1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
+                    cluster 1: sigma = 0.01 and n_points = 5000
+                    cluster 2: sigma = 0.01   and n_points = 15000
+                2) Each client only includes one cluster, i.e., we have 2 clients.
+                3) For each client, we choose 70% data points for training and 30% data points for testing. 
+
+            """
+            DATASET = '3GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 3
+            n_clients = 3
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        else:
+            return {}
+
+    elif p0 == '5GAUSSIANS':
+        writer_ratio = None
+        data_ratio_per_writer = None
+        data_ratio_per_digit = None
+
+        if p1 == '5clients_5clusters':
+            """ Dataset: 
+
+            """
+            DATASET = '5GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 5
+            n_clients = 5
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        elif p1 == '5clients_4clusters':
+            """ Dataset:
+
+            """
+            DATASET = '5GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 4
+            n_clients = 5
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        elif p1 == '5clients_3clusters':
+            """ Dataset:
+
+            """
+            DATASET = '5GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 3
+            n_clients = 5
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+
+    elif p0 == '2MOONS':
+        writer_ratio = None
+        data_ratio_per_writer = None
+        data_ratio_per_digit = None
+        if p1 == '2moons':
+            """ Dataset: 
+                1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
+                    cluster 1: sigma = 0.01 and n_points = 5000
+                    cluster 2: sigma = 0.01   and n_points = 15000
+                2) Each client only includes one cluster, i.e., we have 2 clients.
+                3) For each client, we choose 70% data points for training and 30% data points for testing. 
+
+            """
+            DATASET = '2MOONS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 2
+            n_clients = 2
+            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+
     else:
         raise NotImplementedError(f'{p0}, {p1}')
 
     ##############################################################################################################
-    ### p2 = 'Centralized_random'
+    # p2 = 'Centralized_random'
     if p2 == 'Centralized_random':
         """
             4) We use the centralized kmeans, 
@@ -206,7 +403,6 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
         client_init_centroids = None
         is_federated = False
         out_dir = f'{out_dir}/{DATASET}/{data_name}/Centralized-{server_init_centroids}'
-
 
     elif p2 == 'Federated-Server_random':
         """
@@ -302,10 +498,47 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
         out_dir = f'{out_dir}/{DATASET}/{data_name}/Federated-Server_{server_init_centroids}-' \
                   f'Client_{client_init_centroids}'
 
-    else:
-        return {}
+    elif p2 == 'Federated-Server_sorted-Client_true':
+        """
+            4) We use the federated kmeans. 
+                a) First initialize each client's centroids with true centroids, 
+                b) Then use the sorted method to choose server's centroids from all clients' centroids. 
+        """
+        server_init_centroids = 'sorted'
+        client_init_centroids = 'true'
+        is_federated = True
+        out_dir = f'{out_dir}/{DATASET}/{data_name}/Federated-Server_{server_init_centroids}-' \
+                  f'Client_{client_init_centroids}'
 
-    params = {'p0': p0, 'p1': p1, 'p2': p2, 'repeats': repeats,'client_epochs': client_epochs,
+    elif p2 == 'Federated-Server_sorted-Client_random':
+        """
+            4) We use the federated kmeans. 
+                a) First randomly initialize each client's centroids, 
+                b) Then use the sorted method to choose server's centroids from all clients' centroids. 
+        """
+        server_init_centroids = 'sorted'
+        client_init_centroids = 'random'
+        is_federated = True
+        out_dir = f'{out_dir}/{DATASET}/{data_name}/Federated-Server_{server_init_centroids}-' \
+                  f'Client_{client_init_centroids}'
+
+    elif p2 == 'Federated-Server_sorted-Client_kmeans++':
+        """
+            4) We use the federated kmeans. 
+                a) First initialize each client's centroids with kmeans++, 
+                b) Then use the sorted method to choose server's centroids from all clients' centroids. 
+        """
+        server_init_centroids = 'sorted'
+        client_init_centroids = 'random'
+        is_federated = True
+        out_dir = f'{out_dir}/{DATASET}/{data_name}/Federated-Server_{server_init_centroids}-' \
+                  f'Client_{client_init_centroids}'
+
+    else:
+        msg = p0 + p1 + p2
+        raise NotImplementedError(msg)
+
+    params = {'p0': p0, 'p1': p1, 'p2': p2, 'repeats': repeats, 'client_epochs': client_epochs,
               'is_crop_image': True, 'image_shape': (14, 14),  # For FEMNIST, crop 28x28 to 14x14
               'data_name': data_name,
               'writer_ratio': writer_ratio, 'data_ratio_per_writer': data_ratio_per_writer,

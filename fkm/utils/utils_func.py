@@ -21,7 +21,7 @@ def randomly_init_centroid(min_value, max_value, n_dims, repeats=1, random_state
     r = np.random.RandomState(random_state)
     if repeats == 1:
         # return min_value + (max_value - min_value) * np.random.rand(n_dims)
-        return min_value + (max_value - min_value) * r.rand(n_dims)
+        return min_value + (max_value - min_value) * r.rand(n_dims)  # range [min_val, max_val]
     else:
         # return min_value + (max_value - min_value) * np.random.rand(repeats, n_dims)
         return min_value + (max_value - min_value) * r.rand(repeats, n_dims)
@@ -189,12 +189,12 @@ def plot_centroids(history, out_dir='results', title='', fig_name='fig', params=
                                         connectionstyle="angle3, angleA=90,angleB=0"))
 
         train_db, test_db = scores[i]['train']['davies_bouldin'], scores[i]['test']['davies_bouldin']
-        ax.set_title(f'Train: {train_db:.2f}, Test: {test_db:.2f}\nIterations: {iterations[i]}')
+        ax.set_title(f'Train: {train_db:.2f}, Test: {test_db:.2f}\nIterations: {iterations[i]}, Seed: {seed}')
 
         # # ax.set_xlim([-10, 10]) # [-3, 7]
         # # ax.set_ylim([-15, 15])  # [-3, 7]
-        ax.set_xlim([-3, 3])  # [-3, 7]
-        ax.set_ylim([-3, 3])  # [-3, 7]
+        ax.set_xlim([-4, 4])  # [-3, 7]
+        ax.set_ylim([-4, 4])  # [-3, 7]
 
         ax.axvline(x=0, color='k', linestyle='--')
         ax.axhline(y=0, color='k', linestyle='--')
@@ -323,7 +323,8 @@ def figs2movie(images, out_file='video.mp4'):
 @timer
 def plot_metric_over_time_femnist(history, out_dir='results', title='', fig_name='fig', params={}, is_show=True):
     res = history['results']
-
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     seeds = []
     initial_centroids = []
     final_centroids = []
@@ -428,7 +429,8 @@ def plot_metric_over_time_femnist(history, out_dir='results', title='', fig_name
 
         # ax.axvline(x=0, color='k', linestyle='--')
         # ax.axhline(y=0, color='k', linestyle='--')
-        ax.legend(loc='upper right')
+        if i == 0:
+            ax.legend(loc='upper right')
     fig.suptitle(title, fontsize=20)
     # # Put a legend below current axis
     # plt.legend(loc='lower center', bbox_to_anchor=(-.5, -0.5),   # (x0,y0, width, height)=(0,0,1,1)).
@@ -438,7 +440,7 @@ def plot_metric_over_time_femnist(history, out_dir='results', title='', fig_name
     # plt.xticks([])
     # plt.yticks([])
     plt.tight_layout()
-    fig_path = os.path.join(out_dir, f"{fig_name}.png")
+    fig_path = os.path.join(out_dir, f"{fig_name}-scores.png")
     tmp_dir = os.path.dirname(fig_path)
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
@@ -452,7 +454,8 @@ def plot_metric_over_time_femnist(history, out_dir='results', title='', fig_name
 @timer
 def plot_metric_over_time_2gaussian(history, out_dir='results', title='', fig_name='fig', params={}, is_show=True):
     res = history['results']
-
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     seeds = []
     initial_centroids = []
     final_centroids = []
@@ -560,7 +563,8 @@ def plot_metric_over_time_2gaussian(history, out_dir='results', title='', fig_na
 
         # ax.axvline(x=0, color='k', linestyle='--')
         # ax.axhline(y=0, color='k', linestyle='--')
-        ax.legend(loc='upper right')
+        if i == 0:
+            ax.legend(loc='upper right')
     fig.suptitle(title, fontsize=20)
     # # Put a legend below current axis
     # plt.legend(loc='lower center', bbox_to_anchor=(-.5, -0.5),   # (x0,y0, width, height)=(0,0,1,1)).
@@ -570,7 +574,7 @@ def plot_metric_over_time_2gaussian(history, out_dir='results', title='', fig_na
     # plt.xticks([])
     # plt.yticks([])
     plt.tight_layout()
-    fig_path = os.path.join(out_dir, f"{fig_name}.png")
+    fig_path = os.path.join(out_dir, f"{fig_name}-scores.png")
     tmp_dir = os.path.dirname(fig_path)
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
@@ -706,7 +710,7 @@ def predict_n_saveimg(kmeans, X, Y=None, splits=['train', 'test'], SEED=42, fede
 
 
 @timer
-def obtain_true_centroids(X_dict, y_dict, splits=['train', 'test']):
+def obtain_true_centroids(X_dict, y_dict, splits=['train', 'test'], params=None):
     all_centroids = {}
     for split in splits:
         x = np.concatenate(X_dict[split], axis=0)
@@ -720,7 +724,7 @@ def obtain_true_centroids(X_dict, y_dict, splits=['train', 'test']):
             cnt = np.sum(mask)
             if cnt > 0:
                 centroids[j] = np.sum(x[mask], axis=0) / cnt
-        all_centroids[split] = centroids
+        all_centroids[split] = centroids[:params['n_clusters']]
     return all_centroids
 
 
@@ -729,7 +733,8 @@ def plot_centroids_diff_over_time(history,
                                   title='', fig_name='',
                                   params={}, is_show=True):
     results = history['results']
-
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     seeds = []
     initial_centroids = []
     final_centroids = []

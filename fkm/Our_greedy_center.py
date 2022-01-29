@@ -70,6 +70,11 @@ def compute_client_params(X, centroids):
         cluster_sizes.append(ni)
         cluster_avg_dists.append(avg_dist)
 
+    # add the center of input data X
+    center = np.mean(X, axis=0).reshape(1, -1)
+    centroids = np.concatenate([centroids, center], axis=0)
+    cluster_sizes.append(len(X))
+    cluster_avg_dists.append(np.sum(np.square(X - center))/ len(X))
     return centroids, cluster_sizes, cluster_avg_dists
 
 

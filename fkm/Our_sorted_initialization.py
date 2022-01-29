@@ -1,10 +1,10 @@
 """
     Our proposal:
         1. For clients, we randomly select initialized centroids or use Kmeans++ to select initialized centroids.
-        2. For server, we propose a greedy way to obtain the initialized centroids.
+        2. For server, we propose a sorted way to obtain the initialized centroids.
 
-        # PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 Our_greedy_initialization.py -n '00' > a.txt &
-     PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 Our_greedy_initialization.py --dataset 'FEMNIST' \
+        # PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 Our_sorted_initialization.py -n '00' > a.txt &
+     PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 Our_sorted_initialization.py --dataset 'FEMNIST' \
                 --data_details '1client_multiwriters_1digit' --algorithm 'Centralized_random'
 """
 # Email: Kun.bj@outlook.com
@@ -12,10 +12,10 @@ import argparse
 import traceback
 
 import numpy as np
+from scipy.spatial.distance import cdist
 from sklearn.cluster import kmeans_plusplus
 
 from fkm import _main
-from fkm.clustering.greedy_initialization import greedily_initialize, distance_sq
 from fkm.clustering.my_kmeans import KMeans
 from fkm.experiment_cases import get_experiment_params
 from fkm.utils.utils_func import random_initialize_centroids
@@ -26,7 +26,7 @@ def compute_step_for_client(client_data, centroids):
     # compute distances
     # computationally efficient
     differences = np.expand_dims(client_data, axis=1) - np.expand_dims(centroids, axis=0)
-    sq_dist = np.sum(np.square(differences), axis=2)  # n x k
+    sq_dist = np.sum(np.square(differences), axis=2)
 
     # memory efficient
     # sq_dist = np.zeros((client_data.shape[0], self.n_clusters))
@@ -46,6 +46,7 @@ def compute_step_for_client(client_data, centroids):
             centroid_updates[i, :] = np.sum(client_data[mask] - centroids[i], axis=0)
     return centroid_updates, counts
 
+
 def compute_client_params(X, centroids):
     differences = np.expand_dims(X, axis=1) - np.expand_dims(centroids, axis=0)
     sq_dist = np.sum(np.square(differences), axis=2)
@@ -63,14 +64,31 @@ def compute_client_params(X, centroids):
         mask = np.equal(labels, i)
         ni = np.sum(mask)
         if ni:
-            # avg_dist = np.sqrt(np.sum(np.square(X[mask] - centroids[i]))) / ni
-            avg_dist = np.sum(np.square(X[mask] - centroids[i]))/ ni
+            avg_dist = np.sqrt(np.sum(np.square(X[mask] - centroids[i]))) / ni
         else:
             avg_dist = 0.0
         cluster_sizes.append(ni)
         cluster_avg_dists.append(avg_dist)
 
     return centroids, cluster_sizes, cluster_avg_dists
+
+def sorted_initialize(KM_centroids, KM_ns, KM_ds, n_clusters):
+    n, dim = KM_centroids.shape
+    centroids = np.zeros((n_clusters, dim))
+    # sorted by cluster size, i.e., KM_ns
+    idx = range(0, n)
+    idx, KM_ns, KM_ds = zip(*sorted(zip(idx, KM_ns, KM_ds), key = lambda vs: vs[1], reverse=True))
+    idx = np.asarray(idx)
+    KM_centroids = KM_centroids[idx]
+    # # choose the first centroid.
+    # centroids[0] = KM_centroids[0]
+    # indices = [0]
+    # precompute dist(i, j) between centroid_i and centroid_j
+    # D = np.square(cdist(KM_centroids, KM_centroids, metric='euclidean'))
+    indices = idx[:n_clusters]
+    centroids = KM_centroids[indices]
+
+    return centroids, indices
 
 
 def update_server_centroids(KM_centroids, KM_ns, KM_ds, centroids, alpha):
@@ -119,7 +137,7 @@ class KMeansFederated(KMeans):
             adaptive_lr=None,
             momentum=None,
             epoch_lr=1.0,
-            params=None
+            params = {}
     ):
         super().__init__(
             n_clusters=n_clusters,
@@ -179,7 +197,6 @@ class KMeansFederated(KMeans):
                 interim_updates = np.zeros((self.n_clusters, self.dim))
                 print(f'Client_{i}, initial_centroids: {client_centroids}')
             else:
-                client_counts = None
                 for e in range(self.epochs):
                     client_updates_sum, client_counts = compute_step_for_client(
                         client_data=client_data,
@@ -192,7 +209,7 @@ class KMeansFederated(KMeans):
                     client_centroids = client_centroids + interim_updates
                     if self.verbose > 10:
                         print(f'\t~client_{i}, epoch_{e}, client_centroids: {client_centroids}, '
-                              f'client_counts: {client_counts}, given centroids: {centroids}')
+                                f'client_counts: {client_counts}, given centroids: {centroids}')
 
                 client_updates_sum = (client_centroids - centroids) * np.expand_dims(client_counts, axis=1)
                 updates_sum += client_updates_sum
@@ -259,21 +276,8 @@ class KMeansFederated(KMeans):
             )
             if iteration == 0:  # for the first round, the server will select K centroids from K*M client's centroids.
                 KM_centroids, KM_ns, KM_ds = KM_params['centroids'], KM_params['cluster_sizes'], KM_params['avg_dists']
-                # 1. ignore n_points per each centroid
-                # centroids, indices = kmeans_plusplus(KM_centroids, n_clusters=self.n_clusters, random_state=self.random_state)
-
-                # 2. consider about cluster size: can't do this in the following way because the size of new_KM_centroids will be all clients'data
-                # new_KM_centroids = []
-                # for c, s in zip(KM_centroids, centroid_size):
-                #     new_KM_centroids.extend([c] * int(s))
-                # KM_centroids = np.asarray(new_KM_centroids)
-                # centroids, indices = kmeans_plusplus(KM_centroids, n_clusters=self.n_clusters, random_state=self.random_state)
-
-                # 3. weighted KMeans++
-                # centroids, indices = weighted_kmeans_plusplus(KM_centroids, n_clusters=self.n_clusters, random_state=self.random_state)
-
-                # 4. Greedy initialization
-                centroids, indices = greedily_initialize(KM_centroids, KM_ns, KM_ds, self.n_clusters)
+                # Sorted initialization
+                centroids, indices = sorted_initialize(KM_centroids, KM_ns, KM_ds, self.n_clusters)
                 self.initial_centroids = centroids
                 print(f'initial_centroids: {centroids}')
                 # testing after each iteration
@@ -379,8 +383,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Description of your program')
     # parser.add_argument('-p', '--py_name', help='python file name', required=True)
     parser.add_argument('-S', '--dataset', help='dataset', default='2GAUSSIANS')
-    parser.add_argument('-T', '--data_details', help='data details', default='1client_xlt0_2')
-    parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_greedy-Client_random')
+    parser.add_argument('-T', '--data_details', help='data details', default='1client_1cluster_diff_sigma_n2')
+    parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_sorted-Client_random')
     # args = vars(parser.parse_args())
     args = parser.parse_args()
     print(args)

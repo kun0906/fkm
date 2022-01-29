@@ -17,19 +17,20 @@ if __name__ == '__main__':
     print(__file__)
     parser = argparse.ArgumentParser(description='Description of your program')
     # parser.add_argument('-p', '--py_name', help='python file name', required=True)
-    parser.add_argument('-S', '--dataset', help='dataset', default='2GAUSSIANS')
-    parser.add_argument('-T', '--data_details', help='data details', default='1client_1cluster')
-    parser.add_argument('-M', '--algorithm', help='algorithm', default='Centralized_true')
+    parser.add_argument('-S', '--dataset', help='dataset', default='5GAUSSIANS')
+    parser.add_argument('-T', '--data_details', help='data details', default='5clients_5clusters')
+    parser.add_argument('-M', '--algorithm', help='algorithm', default='Centralized_kmeans++')
     # args = vars(parser.parse_args())
     args = parser.parse_args()
     print(args)
-    params = get_experiment_params(p0=args.dataset, p1=args.data_details, p2=args.algorithm)
+    p3 = __file__.split('/')[-1].split('.')[0]
+    params = get_experiment_params(p0=args.dataset, p1=args.data_details, p2=args.algorithm, p3 =p3)
     pprint(params)
     try:
         _main.run_clustering_federated(
             params,
             "",
-            verbose=10,
+            verbose=15,
         )
     except Exception as e:
         print(f'Error: {e}')

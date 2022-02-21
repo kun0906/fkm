@@ -12,6 +12,7 @@ from fkm.datasets.femnist import femnist_1client_1writer_multidigits, femnist_1c
     femnist_1client_multiwriters_1digit
 from fkm.datasets.gaussian2 import *
 from fkm.datasets.gaussian3 import *
+from fkm.datasets.gaussian4 import *
 from fkm.datasets.gaussian5 import gaussian5_5clients_5clusters
 from fkm.datasets.moon import moons_dataset
 from fkm.utils.utils_func import timer
@@ -365,11 +366,11 @@ def load_federated(limit_csv=None, verbose=False, seed=None, clusters=None, n_cl
         if params['p1'] == '1client_1cluster':
             # 2 clusters ((-1,0), (1, 0)) in R^2, each client has one cluster. 2 clusters has overlaps.
             return gaussian2_1client_1cluster(params, random_state=seed)
-        elif params['p1'] == '1client_0.7cluster1_0.3cluster2':
+        elif params['p1'].split(':')[-1] == 'mix_clusters_per_client':
             # 2 clusters in R^2:
             # 1) client1 has 70% data from cluster 1 and 30% data from cluster2
             # 2) client2 has 30% data from cluster 1 and 70% data from cluster2
-            return gaussian2_1client_7cluster1_3cluster2(params, random_state=seed)
+            return gaussian2_mix_clusters_per_client(params, random_state=seed)
         elif params['p1'] == '1client_ylt0':
             # lt0 means all 'y's are larger than 0
             # 2 clusters in R^2
@@ -392,15 +393,15 @@ def load_federated(limit_csv=None, verbose=False, seed=None, clusters=None, n_cl
             Parameters
             """
             return gaussian2_1client_1cluster_diff_sigma(params, random_state=seed)
-        elif params['p1'] == '1client_1cluster_diff_sigma_n':
+        elif params['p1'].split(':')[-1] == 'diff_sigma_n':
             """
             # 2 clusters ((-1,0), (1, 0)) in R^2, each client has one cluster. 2 clusters has no overlaps.
             cluster 1: sigma = 0.5 and n_points = 5000
             cluster 2: sigma = 1    and n_points = 15000
-            params['p1'] == '1client_1cluster_diff_sigma_n':
+            params['p1'] == 'diff_sigma_n':
             Parameters
             """
-            return gaussian2_1client_1cluster_diff_sigma_n(params, random_state=seed)
+            return gaussian2_diff_sigma_n(params, random_state=seed)
         elif params['p1'] == '1client_xlt0_2':
             """
             # 2 clusters ((-1,0), (1, 0)) in R^2, each client has one cluster. 2 clusters has no overlaps.
@@ -412,22 +413,41 @@ def load_federated(limit_csv=None, verbose=False, seed=None, clusters=None, n_cl
             """
             return gaussian2_1client_xlt0_2(params, random_state=seed)
 
+
     elif params['p0'] == '3GAUSSIANS':
         # here is only for the same sigma. for different sigmas, not implement yet.
         if params['p1'] == '1client_1cluster':
             return gaussian3_1client_1cluster(params, random_state=seed)
-        elif params['p1'] == '1client_0.7cluster1_0.3cluster2':
-            return gaussian3_1client_7cluster1_3cluster2(params, random_state=seed)
+        elif params['p1'].split(':')[-1] == 'mix_clusters_per_client':
+            return gaussian3_mix_clusters_per_client(params, random_state=seed)
         elif params['p1'] == '1client_ylt0':
             return gaussian3_1client_ylt0(params, random_state=seed)
         elif params['p1'] == '1client_xlt0':
             return gaussian3_1client_xlt0(params, random_state=seed)
         elif params['p1'] == '1client_1cluster_diff_sigma':
             return gaussian3_1client_1cluster_diff_sigma(params, random_state=seed)
-        elif params['p1'] == '1client_1cluster_diff_sigma_n':
-            return gaussian3_1client_1cluster_diff_sigma_n(params, random_state=seed)
+        elif params['p1'].split(':')[-1] == 'diff_sigma_n':
+            return gaussian3_diff_sigma_n(params, random_state=seed)
         elif params['p1'] == '1client_xlt0_2':
             return gaussian3_1client_xlt0_2(params, random_state=seed)
+
+    elif params['p0'] == '4GAUSSIANS':
+        # here is only for the same sigma. for different sigmas, not implement yet.
+        # if params['p1'] == '1client_1cluster':
+        #     return gaussian4_1client_1cluster(params, random_state=seed)
+        # elif params['p1'].split(':')[-1] == 'mix_clusters_per_client':
+        #     return gaussian4_mix_clusters_per_client(params, random_state=seed)
+        # elif params['p1'] == '1client_ylt0':
+        #     return gaussian4_1client_ylt0(params, random_state=seed)
+        # elif params['p1'] == '1client_xlt0':
+        #     return gaussian4_1client_xlt0(params, random_state=seed)
+        # elif params['p1'] == '1client_1cluster_diff_sigma':
+        #     return gaussian4_1client_1cluster_diff_sigma(params, random_state=seed)
+        if params['p1'].split(':')[-1] == 'diff_sigma_n':
+            return gaussian4_diff_sigma_n(params, random_state=seed)
+        # elif params['p1'] == '1client_xlt0_2':
+        #     return gaussian4_1client_xlt0_2(params, random_state=seed)
+
     elif params['p0'] == '5GAUSSIANS':
         # here is only for the same sigma. for different sigmas, not implement yet.
         if params['p1'] == '5clients_5clusters':

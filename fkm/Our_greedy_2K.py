@@ -13,6 +13,7 @@ import traceback
 
 import numpy as np
 from sklearn.cluster import kmeans_plusplus
+from sklearn.preprocessing import StandardScaler
 
 from fkm import _main
 from fkm.clustering.greedy_initialization import greedily_initialize, distance_sq
@@ -70,11 +71,11 @@ def compute_client_params(X, centroids):
         cluster_sizes.append(ni)
         cluster_avg_dists.append(avg_dist)
 
-    # add the center of input data X
-    center = np.mean(X, axis=0).reshape(1, -1)
-    centroids = np.concatenate([centroids, center], axis=0)
-    cluster_sizes.append(len(X))
-    cluster_avg_dists.append(np.sum(np.square(X - center))/ len(X))
+    # # add the center of input data X
+    # center = np.mean(X, axis=0).reshape(1, -1)
+    # centroids = np.concatenate([centroids, center], axis=0)
+    # cluster_sizes.append(len(X))
+    # cluster_avg_dists.append(np.sum(np.square(X - center))/ len(X))
     return centroids, cluster_sizes, cluster_avg_dists
 
 
@@ -232,6 +233,7 @@ class KMeansFederated(KMeans):
         X = X_dict['train']
         self.num_clients = len(X)
         self.dim = X[0].shape[1]
+
         # clients_per_round = max(1, int(self.sample_fraction * self.num_clients))
         clients_per_round = self.num_clients
         # centroids = self.do_init_centroids()

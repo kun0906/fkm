@@ -5,7 +5,9 @@ numpy==1.22.1
 matplotlib==3.5.1
 pandas==1.4.0
 scikit-learn==1.0.2
+# Install ffmpeg with conda: conda install -c conda-forge ffmpeg
 ffmpeg==1.4
 XlsxWriter==3.0.2
+Pillow==9.0.1
 
 

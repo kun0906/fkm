@@ -9,7 +9,7 @@
 import os
 
 from fkm.experiment_cases import get_experiment_params
-from fkm.kun import gen_cases
+from fkm.sbatch import gen_cases
 # from fkm.utils.utils_func import load, plot_metric_over_time
 from fkm.utils.utils_func import load, history2movie
 
@@ -108,8 +108,8 @@ def main():
         # dataset = 'FEMNIST'
         py_names = [
             'Centralized_Kmeans',
-            'Stanford_random_initialization',
-            'Stanford_average_initialization',
+            'Stanford_server_random_initialization',
+            'Stanford_client_initialization',
             'Our_greedy_initialization'
         ]
         if dataset == 'FEMNIST':
@@ -147,7 +147,7 @@ def main():
                 cnt += cnt_
         elif dataset == '2GAUSSIANS':
             cnt = 0
-            for data_details in ['1client_1cluster', '1client_0.7cluster1_0.3cluster2',
+            for data_details in ['1client_1cluster', 'mix_clusters_per_client',
                                  '1client_ylt0', '1client_xlt0']:
                 cnt_ = 0
                 for py_name in py_names:

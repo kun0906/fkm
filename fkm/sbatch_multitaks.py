@@ -2,7 +2,7 @@
     run:
         module load anaconda3/2021.5
         cd /scratch/gpfs/ky8517/fkm/fkm
-        PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 kun.py
+        PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 sbatch.py
 
 """
 # Email: kun.bj@outlook.com
@@ -92,13 +92,13 @@ python3 -V
 
 def gen_cases(py_name, dataset='FEMNIST', data_details='1client_1writer_multidigits'):
     cases = []
-    if py_name == 'Stanford_random_initialization':
+    if py_name == 'Stanford_server_random_initialization':
         # p0, p1, p2
         algorithms = [
             'Federated-Server_true',  # use true centroids as initial centroids.
             'Federated-Server_random',
         ]
-    elif py_name == 'Stanford_average_initialization':
+    elif py_name == 'Stanford_client_initialization':
         algorithms = [
             'Federated-Server_average-Client_true',
             'Federated-Server_average-Client_random',
@@ -150,8 +150,8 @@ def main():
         # dataset = 'FEMNIST'
         py_names = [
             'Centralized_Kmeans',
-            'Stanford_random_initialization',
-            'Stanford_average_initialization',
+            'Stanford_server_random_initialization',
+            'Stanford_client_initialization',
             'Our_greedy_initialization',
             'Our_greedy_center',
             'Our_greedy_2K',
@@ -163,16 +163,16 @@ def main():
                              '1client_multiwriters_1digit']
         elif dataset == '2GAUSSIANS':
             data_details_lst = [
-                # '1client_1cluster', '1client_0.7cluster1_0.3cluster2',
+                # '1client_1cluster', 'mix_clusters_per_client',
                 # '1client_ylt0', '1client_xlt0',
-                # '1client_1cluster_diff_sigma', '1client_1cluster_diff_sigma_n',
+                # '1client_1cluster_diff_sigma', 'diff_sigma_n',
                 '1client_xlt0_2',
             ]
         elif dataset == '3GAUSSIANS':
             data_details_lst = [
-                '1client_1cluster', '1client_0.7cluster1_0.3cluster2',
+                '1client_1cluster', 'mix_clusters_per_client',
                 '1client_ylt0', '1client_xlt0',
-                '1client_1cluster_diff_sigma', '1client_1cluster_diff_sigma_n',
+                '1client_1cluster_diff_sigma', 'diff_sigma_n',
                 '1client_xlt0_2',
             ]
         elif dataset == '5GAUSSIANS':

@@ -3,8 +3,8 @@
         1. For clients, we randomly select initialized centroids or use Kmeans++ to select initialized centroids.
         2. For server, we use the average of clients' centroids.
 
-    # PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 Stanford_average_initialization.py -n '00' > a.txt &
-    PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 Stanford_average_initialization.py --dataset 'FEMNIST' \
+    # PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 Stanford_client_initialization.py -n '00' > a.txt &
+    PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 Stanford_client_initialization.py --dataset 'FEMNIST' \
                 --data_details '1client_multiwriters_1digit' --algorithm 'Centralized_random'
 """
 # Email: Kun.bj@outlook.com

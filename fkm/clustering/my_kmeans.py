@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.cluster import kmeans_plusplus
+from sklearn.preprocessing import StandardScaler
 
 from fkm.utils.utils_func import random_initialize_centroids, timer
 from fkm.utils.utils_stats import plot_progress, evaluate2

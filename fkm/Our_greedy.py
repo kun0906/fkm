@@ -13,6 +13,7 @@ import traceback
 
 import numpy as np
 from sklearn.cluster import kmeans_plusplus
+from sklearn.preprocessing import StandardScaler
 
 from fkm import _main
 from fkm.clustering.greedy_initialization import greedily_initialize
@@ -277,6 +278,7 @@ class KMeansFederated(KMeans):
         X = X_dict['train']
         self.num_clients = len(X)
         self.dim = X[0].shape[1]
+
         # clients_per_round = max(1, int(self.sample_fraction * self.num_clients))
         clients_per_round = self.num_clients
         # centroids = self.do_init_centroids()

@@ -232,6 +232,7 @@ class KMeansFederated(KMeans):
         X = X_dict['train']
         self.num_clients = len(X)
         self.dim = X[0].shape[1]
+
         # clients_per_round = max(1, int(self.sample_fraction * self.num_clients))
         clients_per_round = self.num_clients
         # centroids = self.do_init_centroids()
@@ -384,8 +385,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Description of your program')
     # parser.add_argument('-p', '--py_name', help='python file name', required=True)
     parser.add_argument('-S', '--dataset', help='dataset', default='2GAUSSIANS')
-    parser.add_argument('-T', '--data_details', help='data details', default='1client_xlt0_2')
-    parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_greedy-Client_random')
+    parser.add_argument('-T', '--data_details', help='data details', default='n1_5000-sigma1_2+n2_5000-sigma2_2:ratio_0.0:diff_sigma_n')
+    parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_greedy-Client_kmeans++')
     # args = vars(parser.parse_args())
     args = parser.parse_args()
     print(args)

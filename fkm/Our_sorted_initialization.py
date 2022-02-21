@@ -383,7 +383,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Description of your program')
     # parser.add_argument('-p', '--py_name', help='python file name', required=True)
     parser.add_argument('-S', '--dataset', help='dataset', default='2GAUSSIANS')
-    parser.add_argument('-T', '--data_details', help='data details', default='1client_1cluster_diff_sigma_n2')
+    parser.add_argument('-T', '--data_details', help='data details', default='diff_sigma_n2')
     parser.add_argument('-M', '--algorithm', help='algorithm', default='Federated-Server_sorted-Client_random')
     # args = vars(parser.parse_args())
     args = parser.parse_args()

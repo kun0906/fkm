@@ -2,7 +2,7 @@ import os
 
 
 def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_multidigits',
-                          p2='Centralized_random', p3='py_name', client_epochs=1):
+                          p2='Centralized_random', p3='py_name', client_epochs=1, tolerance=1e-6):
     """
 
     Parameters
@@ -17,8 +17,10 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
     -------
 
     """
+    normalize_method = 'std'
     repeats = 50 if 'GAUSSIANS' in p0 else 10
-    out_dir = os.path.join(out_dir, f'repeats_{repeats}-client_epochs_{client_epochs}-tol_1e-10', p3)
+    # tolerance =f"{tolerance:.2e}"
+    out_dir = os.path.join(out_dir, f'repeats_{repeats}-client_epochs_{client_epochs}-tol_{str(tolerance)}-normalize_{normalize_method}', p3)
     ##############################################################################################################
     # p0 = 'FEMNIST'
     if p0 == 'FEMNIST':
@@ -36,7 +38,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             data_ratio_per_digit = None
             n_clusters = 10
             n_clients = None
-            data_name = f'{DATASET}-Writers_{writer_ratio}-Testset_{data_ratio_per_writer}-Clusters_{n_clusters}-Clients_{n_clients}-{p1}'
+            data_name = f'Writers_{writer_ratio}-Testset_{data_ratio_per_writer}-Clusters_{n_clusters}-Clients_{n_clients}-{p1}'
         elif p1 == '1client_multiwriters_multidigits':
             # each client includes multiwriters, and each writer includes 10 digits.
             """ Dataset:
@@ -51,7 +53,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             data_ratio_per_digit = None
             n_clusters = 10
             n_clients = 20
-            data_name = f'{DATASET}-Writers_{writer_ratio}-Testset_{data_ratio_per_writer}-Clusters_{n_clusters}-Clients_{n_clients}-{p1}'
+            data_name = f'Writers_{writer_ratio}-Testset_{data_ratio_per_writer}-Clusters_{n_clusters}-Clients_{n_clients}-{p1}'
 
         elif p1 == '1client_multiwriters_1digit':
             # each client includes multi writers, and each client only includes 1 digit.
@@ -67,7 +69,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             data_ratio_per_digit = 0.3
             n_clusters = 10
             n_clients = 10
-            data_name = f'{DATASET}-Writers_{writer_ratio}-Testset_{data_ratio_per_digit}-Clusters_{n_clusters}-Clients_{n_clients}-{p1}'
+            data_name = f'Writers_{writer_ratio}-Testset_{data_ratio_per_digit}-Clusters_{n_clusters}-Clients_{n_clients}-{p1}'
         else:
             msg = p1
             raise NotImplementedError(msg)
@@ -90,8 +92,8 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 2
             n_clients = 2
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
-        elif p1 == '1client_0.7cluster1_0.3cluster2':
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        elif p1.split(':')[-1] == 'mix_clusters_per_client':
 
             """ Dataset: 
                         1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points. 
@@ -104,7 +106,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 2
             n_clients = 2
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
 
         elif p1 == '1client_ylt0':
             # lt0 means all 'y's are larger than 0
@@ -121,7 +123,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 2
             n_clients = 2
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
         elif p1 == '1client_xlt0':
             # lt0 means all 'x's are larger than 0
             """ Dataset: 
@@ -137,7 +139,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 2
             n_clients = 2
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
         elif p1 == '1client_1cluster_diff_sigma':
             """ Dataset: 
                 1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
@@ -153,8 +155,8 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 2
             n_clients = 2
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
-        elif p1 == '1client_1cluster_diff_sigma_n':
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        elif p1.split(':')[-1] == 'diff_sigma_n':
             """ Dataset: 
                 1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
                     cluster 1: sigma = 0.1 and n_points = 5000
@@ -169,7 +171,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 2
             n_clients = 2
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
 
         elif p1 == '1client_xlt0_2':
             """ Dataset: 
@@ -186,7 +188,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 2
             n_clients = 2
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
         else:
             return {}
 
@@ -208,8 +210,8 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 3
             n_clients = 3
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
-        elif p1 == '1client_0.7cluster1_0.3cluster2':
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        elif p1.split(':')[-1] == 'mix_clusters_per_client':
 
             """ Dataset: 
                         1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points. 
@@ -222,7 +224,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 3
             n_clients = 3
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
 
         elif p1 == '1client_ylt0':
             # lt0 means all 'y's are larger than 0
@@ -239,7 +241,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 3
             n_clients = 3
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
         elif p1 == '1client_xlt0':
             # lt0 means all 'x's are larger than 0
             """ Dataset: 
@@ -255,7 +257,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 3
             n_clients = 3
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
         elif p1 == '1client_1cluster_diff_sigma':
             """ Dataset: 
                 1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
@@ -271,8 +273,8 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 3
             n_clients = 3
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
-        elif p1 == '1client_1cluster_diff_sigma_n':
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        elif p1.split(':')[-1] == 'diff_sigma_n':
             """ Dataset: 
                 1) We generate 2 clusters ((-1,0), (1, 0)) in R^2, and each of them has 10000 data points.
                     cluster 1: sigma = 0.1 and n_points = 5000
@@ -287,7 +289,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 3
             n_clients = 3
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
 
         elif p1 == '1client_xlt0_2':
             """ Dataset: 
@@ -304,7 +306,25 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 3
             n_clients = 3
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+        else:
+            return {}
+
+    elif p0 == '4GAUSSIANS':
+        writer_ratio = None
+        data_ratio_per_writer = None
+        data_ratio_per_digit = None
+
+        if p1.split(':')[-1] == 'diff_sigma_n':
+            """ Dataset: 
+			"""
+            DATASET = '4GAUSSIANS'
+            # writer_ratio = 0.1
+            test_size = 0.3
+            # data_ratio_per_digit = None
+            n_clusters = 2
+            n_clients = 2
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
         else:
             return {}
 
@@ -323,7 +343,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 5
             n_clients = 5
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
         elif p1 == '5clients_4clusters':
             """ Dataset:
 
@@ -334,7 +354,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 4
             n_clients = 5
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
         elif p1 == '5clients_3clusters':
             """ Dataset:
 
@@ -345,7 +365,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 3
             n_clients = 5
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
 
     elif p0 == '2MOONS':
         writer_ratio = None
@@ -366,7 +386,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
             # data_ratio_per_digit = None
             n_clusters = 2
             n_clients = 2
-            data_name = f'{DATASET}-{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
+            data_name = f'{p1}-Testset_{test_size}-Clusters_{n_clusters}-Clients_{n_clients}'
 
     else:
         raise NotImplementedError(f'{p0}, {p1}')
@@ -411,6 +431,27 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
                 b) Then broadcast the server's centroids to each client.
         """
         server_init_centroids = 'random'
+        client_init_centroids = None
+        is_federated = True
+        out_dir = f'{out_dir}/{DATASET}/{data_name}/Federated-Server_{server_init_centroids}-' \
+                  f'Client_{client_init_centroids}'
+
+    elif p2 == 'Federated-Server_random_min_max':
+        """
+            4) We use the federated kmeans. 
+                a) First randomly initialize server' centroids, 
+                b) Then broadcast the server's centroids to each client.
+        """
+        server_init_centroids = 'random_min_max'
+        client_init_centroids = None
+        is_federated = True
+        out_dir = f'{out_dir}/{DATASET}/{data_name}/Federated-Server_{server_init_centroids}-' \
+                  f'Client_{client_init_centroids}'
+
+    elif p2 == 'Federated-Server_gaussian':
+        """
+        """
+        server_init_centroids = 'gaussian'
         client_init_centroids = None
         is_federated = True
         out_dir = f'{out_dir}/{DATASET}/{data_name}/Federated-Server_{server_init_centroids}-' \
@@ -539,6 +580,7 @@ def get_experiment_params(out_dir='results', p0='FEMNIST', p1='1client_1writer_m
         raise NotImplementedError(msg)
 
     params = {'p0': p0, 'p1': p1, 'p2': p2, 'repeats': repeats, 'client_epochs': client_epochs,
+              'tolerance': tolerance, 'normalize_method': normalize_method,
               'is_crop_image': True, 'image_shape': (14, 14),  # For FEMNIST, crop 28x28 to 14x14
               'data_name': data_name,
               'writer_ratio': writer_ratio, 'data_ratio_per_writer': data_ratio_per_writer,

@@ -50,7 +50,8 @@ def davies_bouldin(x, labels, centroids, verbose=False):
 
 
 def euclidean_dist(x, labels, centroids):
-    distances = np.sqrt(np.sum(np.square(x - centroids[labels]), axis=1))
+    # distances = np.sqrt(np.sum(np.square(x - centroids[labels]), axis=1))
+    distances = np.sum(np.square(x - centroids[labels]), axis=1)
     dist = np.mean(distances)
     return dist
 

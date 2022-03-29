@@ -1,0 +1,63 @@
+### Experimental configuration
+#
+#
+# Email: kun.bj@outlook.com
+
+SEED: 42
+VERBOSE: 2     # (almost) no info: 0, basic info: 1, debug level1: 2, debug level2: 3, debug level3: 4
+IN_DIR: './datasets'
+OUT_DIR: './out'
+IS_SHOW: True
+SHOW_TITLE: True
+SEPERTOR: '|'
+OVERWRITE: True
+
+N_REPEATS: 5
+NORMALIZE_METHOD: 'std'   # std (default), min-max
+N_CLIENTS: 2
+N_CLUSTERS: 2
+IS_FEDERATED: False
+
+DATASET:    # data information
+    name: '3GAUSSIANS'
+    py_name: None
+    detail: 'femnist_user_percent'
+
+ALGORITHM:
+    name:  None      #   not used yet
+    py_name: 'centralized_kmeans'
+    server_init_method: 'kmeans++'
+    client_init_method: None
+
+#IS_FEDERATED: True
+#ALGORITHM:
+#    name:  None
+#    py_name: 'federated_server_init_first'
+#    n_clusters: 2
+#    server_init_method: 'min_max'
+#    client_init_method: None
+#
+#IS_FEDERATED: True
+#ALGORITHM:
+#    name:  None
+#    py_name: 'federated_client_init_first'
+#    n_clusters: 2
+#    server_init_method: 'average'
+#    client_init_method: 'kmeans++'
+#
+#IS_FEDERATED: True
+#ALGORITHM:
+#    name: None
+#    py_name: 'federated_greedy_kmeans'
+#    n_clusters: 2
+#    server_init_method: 'greedy'
+#    client_init_method: 'kmeans++'
+
+n_consecutive: 5
+
+ROUNDS: 100
+CLIENT_EPOCHS: 1
+TOLERANCE: 1e-4   # 1e-4, format(0.00001, '.0e')
+# if the number of clusters in test set is != 'N_CLUSTERS', the code will have an issue when we compute
+# the difference (centroids-true_centroids). In this case, we only set SPLITS as ['train'].
+SPLITS: ['train'] #['train', 'test']

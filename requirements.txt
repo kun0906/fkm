@@ -1,13 +1,28 @@
-# pip3 install -r requirements.txt
-# Python3.10
+# Author: Kun
+# Email: kun.bj@outlook.com
 
+### System setting
+# Conda 4.10.3 # Conda -V
+# Python 3.9.7 # Python3 -V
+# Pip3 21.2.4 # Pip3 -V
+
+### Installation instruction
+# pip3 install -r requirements.txt
+
+### Library requirement
 numpy==1.22.1
 matplotlib==3.5.1
-pandas==1.4.0
+#pandas==1.4.0
 scikit-learn==1.0.2
-# Install ffmpeg with conda: conda install -c conda-forge ffmpeg
-ffmpeg==1.4
+ffmpeg==1.4 # Install ffmpeg with conda: conda install -c conda-forge ffmpeg
 XlsxWriter==3.0.2
 Pillow==9.0.1
+seaborn==0.11.2
+#tabulate==0.8.9
+ruamel.yaml==0.17.21
+coloredlogs==15.0.1
+
+
+
 
 

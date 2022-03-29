@@ -4,3 +4,10 @@
 /fkm/results-gen_data/
 /fkm/legacy /
 /federated_kmeans_Stanford/
+
+
+
+!/start_fkm.sh
+
+!/gpu.sh
+/.pytest_cache/

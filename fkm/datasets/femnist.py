@@ -7,13 +7,151 @@ FEMNIST:
 https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_plusplus.html#sphx-glr-auto-examples-cluster-plot-kmeans-plusplus-py
 
 """
+import collections
 import json
 import os
+import pickle
 from collections import Counter
 
 import numpy as np
 import sklearn.model_selection
+from sklearn.model_selection import train_test_split
 
+
+def femnist_multiusers_per_client(args, random_state=42):
+    # cp /scratch/gpfs/ky8517/leaf-torch/data/femnist /scratch/gpfs/ky8517/fkm/datasets/femnist
+    in_dir='datasets/FEMNIST'
+    # data_file = args['data_file']
+    # dataset_detail = args['DATASET']['detail']
+    # data_file = os.path.join(in_dir,  f'{dataset_detail}.dat')
+    # if os.path.exists(data_file):
+    #     return utils_func.load(data_file)
+
+    def get_xy(in_dir = 'train'):
+        X_clients = []
+        y_clients = []
+        n_users = 0
+        n_data_points = 0
+        seen = set()
+        for i, json_file in enumerate(os.listdir(in_dir)):
+            if ".DS_Store" in json_file: continue
+            try:
+                with open(os.path.join(in_dir, json_file), 'rb') as f:
+                    vs = json.load(f)
+
+                print(i, json_file, len(vs['users']), vs['num_samples'])
+                n_users += len(vs['users'])
+                for j, user in enumerate(vs['users']):
+                    if user in seen: continue
+                    seen.add(user)
+                    tmp = vs['user_data'][user]
+                    if len(tmp['y']) < 200:
+                        x_ = tmp['x']
+                        y_ = tmp['y']
+                    else:
+                        x_, y_ = sklearn.utils.resample(tmp['x'], tmp['y'], replace=False, n_samples=200, random_state=random_state)
+                    dim = len(x_[0])
+                    n_data_points += len(x_)
+                    X_clients.append(np.asarray(x_))    # each client only has one user data
+                    y_clients.append(np.asarray(y_))
+            except Exception as e:
+                print(f'open error: {json_file}')
+                continue
+        print(f'n_users: {n_users}, n_data_points: {n_data_points}, dim: {dim}')
+        return X_clients, y_clients
+
+    clients_train_x, clients_train_y = get_xy(os.path.join(in_dir, 'train'))
+    clients_test_x, clients_test_y = get_xy(os.path.join(in_dir, 'test'))
+
+    x = {'train': clients_train_x,
+         'test': clients_test_x}
+    labels = {'train': clients_train_y,
+              'test': clients_test_y}
+
+    # y_tmp = []
+    # for vs in clients_train_y:
+    #     y_tmp.extend(vs)
+    # print(f'n_train_clients: {len(clients_train_x)}, n_datapoints: {sum(len(vs) for vs in clients_train_y)}, '
+    #       f'cluster_size: {sorted(Counter(y_tmp).items(), key=lambda kv: kv[0], reverse=False)}')
+    # y_tmp = []
+    # for vs in clients_test_y:
+    #     y_tmp.extend(vs)
+    # print(f'n_test_clients: {len(clients_test_x)}, n_datapoints: {sum(len(vs) for vs in clients_test_y)},'
+    #       f'cluster_size: {sorted(Counter(y_tmp).items(), key=lambda kv: kv[0], reverse=False)}')
+    # utils_func.dump((x, labels), data_file)
+    return x, labels
+
+
+def femnist_diff_sigma_n(args, random_state=42):
+    n_clients = args['N_CLIENTS']
+    dataset_detail = args['DATASET']['detail']  # 'nbaiot_user_percent_client:ratio_0.1'
+    p1 = dataset_detail.split(':')
+    ratio = float(p1[1].split('_')[1])
+
+    p1_0 = p1[0].split('+')  # 'n1_100-sigma1_0.1, n2_1000-sigma2_0.2, n3_10000-sigma3_0.3
+    p1_0_c1 = p1_0[0].split('-')
+    n1 = int(p1_0_c1[0].split('_')[1])
+    # tmp = p1_0_c1[1].split('_')
+    # sigma1_0, sigma1_1 = float(tmp[1]), float(tmp[2])
+
+    # cp /scratch/gpfs/ky8517/leaf-torch/data/femnist /scratch/gpfs/ky8517/fkm/datasets/femnist
+    in_dir='datasets/FEMNIST'
+    # data_file = args['data_file']
+    # dataset_detail = args['DATASET']['detail']
+    # data_file = os.path.join(in_dir,  f'{dataset_detail}.dat')
+    # if os.path.exists(data_file):
+    #     return utils_func.load(data_file)
+
+    def get_xy(in_dir = 'train'):
+        X_clients = []
+        y_clients = []
+        Y = []
+        n_users = 0
+        n_data_points = 0
+        seen = set()
+        users = []
+        for i, json_file in enumerate(os.listdir(in_dir)):
+            if ".DS_Store" in json_file: continue
+            try:
+                with open(os.path.join(in_dir, json_file), 'rb') as f:
+                    vs = json.load(f)
+            except Exception as e:
+                print(f'open error: {json_file}')
+                continue
+            users.extend(vs['user_data'].values())
+
+        x = users
+        dim = 0
+        n_users = len(users)
+        for i in range(n_clients):
+            x, x_ = train_test_split(x, test_size=n1, shuffle=True,
+                                     random_state=random_state)  # train set = 1-ratio
+            tmp_x = []
+            tmp_y = []
+            for usr in x_:
+                x1 = usr['x']
+                y1 = usr['y']
+                dim = len(x1[0])
+                tmp_x.extend(x1)
+                tmp_y.extend(y1)
+            n_data_points += len(tmp_y)
+            X_clients.append(np.asarray(tmp_x))  # each client has one user's data
+            y_clients.append(np.asarray(tmp_y))
+            Y.extend(list(tmp_y))
+        Y = collections.Counter(Y)
+        print(f'Y({len(Y.items())}): {Y.items()}')
+        print(f'n_clients: {n_clients}, {n1} users per client, n_data_points: {n_data_points}, dim: {dim}')
+        return X_clients, y_clients
+
+    clients_train_x, clients_train_y = get_xy(os.path.join(in_dir, 'train'))
+    clients_test_x, clients_test_y = get_xy(os.path.join(in_dir, 'test'))
+
+    x = {'train': clients_train_x,
+         'test': clients_test_x}
+    labels = {'train': clients_train_y,
+              'test': clients_test_y}
+
+    return x, labels
 
 def femnist(in_dir='datasets/femnist/all_data'):
     keys = []
@@ -55,11 +193,11 @@ def load_femnist_user_percent(params={}, random_state=42):
         clients_test_x = []
         clients_test_y = []
         for i, f in enumerate(files):
+            if k not in res['user_data'].keys(): continue
             with open(f) as json_file:
                 res = json.load(json_file)
 
                 for k in train_keys:
-                    if k not in res['user_data'].keys(): continue
                     data = res['user_data'][k]
                     # only keep 0-9 digitals
                     # ab = [(v, l) for v, l in zip(data['x'], data['y']) if l in list(range(10))]

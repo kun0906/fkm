@@ -9,12 +9,15 @@ from datetime import datetime
 
 import matplotlib
 import matplotlib.pyplot as plt
-import numpy as np
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
 # project_dir = os.path.dirname(os.getcwd())
 project_dir = os.getcwd()
 project_dir = project_dir if os.path.isdir(project_dir) else os.path.dirname(project_dir)
+import numpy as np
+# These options determine the way floating point numbers, arrays and
+# other NumPy objects are displayed.
+# np.set_printoptions(precision=3, suppress=True)
 
 
 def randomly_init_centroid(min_value, max_value, n_dims, repeats=1, random_state=42):
@@ -188,8 +191,9 @@ def plot_centroids(history, out_dir='results', title='', fig_name='fig', params=
                         arrowprops=dict(arrowstyle="->", color='r', shrinkA=1,
                                         connectionstyle="angle3, angleA=90,angleB=0"))
 
-        train_db, test_db = scores[i]['train']['davies_bouldin'], scores[i]['test']['davies_bouldin']
-        ax.set_title(f'Train: {train_db:.2f}, Test: {test_db:.2f}\nIterations: {iterations[i]}, Seed: {seed}')
+        train_db = scores[i]['train']['davies_bouldin']
+        # test_db = scores[i]['test']['davies_bouldin']
+        ax.set_title(f'Train: {train_db:.2f} DB score.\nIterations: {iterations[i]}, Seed: {seed}')
 
         # # ax.set_xlim([-10, 10]) # [-3, 7]
         # # ax.set_ylim([-15, 15])  # [-3, 7]
@@ -724,7 +728,11 @@ def obtain_true_centroids(X_dict, y_dict, splits=['train', 'test'], params=None)
             cnt = np.sum(mask)
             if cnt > 0:
                 centroids[j] = np.sum(x[mask], axis=0) / cnt
-        all_centroids[split] = centroids[:params['n_clusters']]
+
+        # print(centroids.round(3))
+        # print(split, x.shape, len(x[0]), n_clusters, centroids.shape, params['N_CLUSTERS'])
+        print(f'min: {np.min(x)} and max: {np.max(x)}')
+        all_centroids[split] = centroids[:params['N_CLUSTERS']]
     return all_centroids
 
 
@@ -754,7 +762,7 @@ def plot_centroids_diff_over_time(history,
     ######################################################################
     # save centroids to images
     nrows, ncols = 6, 5
-    fig, axes = plt.subplots(nrows, ncols, sharex=True, sharey=True, figsize=(15, 15))  # width, height
+    fig, axes = plt.subplots(nrows, ncols, sharex=True, sharey=False, figsize=(15, 15))  # width, height
     # axes = axes.reshape((nrows, ncols))
     f = os.path.join(out_dir, f'centroids_diff.png')
     colors = ["r", "g", "b", "m", 'black']
@@ -768,23 +776,23 @@ def plot_centroids_diff_over_time(history,
         # # training_h.append({'iteration': iteration, 'centroids': centroids, 'scores': scores,
         # #                      'centroids_update': centroids_update, 'centroids_diff': centroids_diff})
         x = [vs['iteration'] for vs in training_h]
-        y = [np.sum(np.square(vs['centroids_update'])) for vs in training_h]
-        ax.plot(x, y, f'b-', label=f'centroids_update')
-
         split = 'train'
-        y = [np.sum(np.square(vs['centroids_diff'][split])) for vs in training_h]
-        ax.plot(x, y, f'g-', label=f'{split}, centroids_diff')
+        y = [np.sum(np.square(vs['centroids_update'])) for vs in training_h]
+        ax.plot(x, y, f'b-*', label=f'{split}:||centroids(t)-centroids(t-1)||')
 
-        split = 'test'
         y = [np.sum(np.square(vs['centroids_diff'][split])) for vs in training_h]
-        ax.plot(x, y, f'r-', label=f'{split}, centroids_diff')
+        ax.plot(x, y, f'g-o', label=f'{split}:||centroids(t)-true||')
+
+        # split = 'test'
+        # y = [np.sum(np.square(vs['centroids_diff'][split])) for vs in training_h]
+        # ax.plot(x, y, f'r-', label=f'{split}:||centroids(t)-true||')
 
         ax.set_title(f'Iterations: {iterations[i]}, SEED: {seed}')
-        ax.set_ylabel('')
+        # ax.set_ylabel('')
         ax.set_xlabel('Iterations')
         if i == 0:
             ax.legend(loc="upper right")
-    fig.suptitle(title + fig_name + ', centroids diff')
+    fig.suptitle(title + fig_name + ', centroids update / diff over time')
     plt.tight_layout()
     plt.savefig(f, dpi=600, bbox_inches='tight')
     if is_show:
@@ -953,8 +961,9 @@ def history2movie(history, out_dir='.',
                             arrowprops=dict(arrowstyle="->", color='r', shrinkA=1,
                                             connectionstyle="angle3, angleA=90,angleB=0"))
 
-            train_db, test_db = scores_list[i]['train']['davies_bouldin'], scores_list[i]['test']['davies_bouldin']
-            ax.set_title(f'Train: {train_db:.2f}, Test: {test_db:.2f}\nIterations: {ith_iteration + 1}')
+            train_db = scores_list[i]['train']['davies_bouldin']
+            # test_db = scores_list[i]['test']['davies_bouldin']
+            ax.set_title(f'Train: {train_db:.2f} DB score. \nIterations: {ith_iteration + 1}')
 
             ax.set_xlim([-3, 3])  # [-3, 7]
             ax.set_ylim([-3, 3])  # [-3, 7]

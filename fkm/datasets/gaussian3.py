@@ -58,7 +58,7 @@ def gaussian3_1client_1cluster(params, random_state=42):
         fig, ax = plt.subplots()
         # colors = ["#4EACC5", "#FF9C34", "#4E9A06", "m"]
         colors = ["r", "g", "b", "m", 'black']
-        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='centroid_1')
+        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='Centroid 1')
         p = np.mean(X1, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -73,7 +73,7 @@ def gaussian3_1client_1cluster(params, random_state=42):
         # angleA : starting angle of the path
         # angleB : ending angle of the path
 
-        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='centroid_2')
+        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='Centroid 2')
         p = np.mean(X2, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -85,7 +85,7 @@ def gaussian3_1client_1cluster(params, random_state=42):
                     arrowprops=dict(arrowstyle="->", color='r', shrinkA=1, lw=2,
                                     connectionstyle="angle3, angleA=90,angleB=0"))
 
-        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='centroid_3')
+        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='Centroid 3')
         p = np.mean(X3, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -207,7 +207,7 @@ def gaussian3_random_ratio(params, random_state=42):
         fig, ax = plt.subplots()
         # colors = ["#4EACC5", "#FF9C34", "#4E9A06", "m"]
         colors = ["r", "g", "b", "m", 'black']
-        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='centroid_1')
+        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='Centroid 1')
         p = np.mean(X1, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -222,7 +222,7 @@ def gaussian3_random_ratio(params, random_state=42):
         # angleA : starting angle of the path
         # angleB : ending angle of the path
 
-        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='centroid_2')
+        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='Centroid 2')
         p = np.mean(X2, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -234,7 +234,7 @@ def gaussian3_random_ratio(params, random_state=42):
                     arrowprops=dict(arrowstyle="->", color='r', shrinkA=1, lw=2,
                                     connectionstyle="angle3, angleA=90,angleB=0"))
 
-        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='centroid_3')
+        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='Centroid 3')
         p = np.mean(X3, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -283,7 +283,7 @@ def gaussian3_random_ratio(params, random_state=42):
 
 
 
-def gaussian3_mix_clusters_per_client(params, random_state=42):
+def gaussian3_mix_clusters_per_client(params, random_state=42, **kwargs):
     """
      if params['p1'] == 'mix_clusters_per_client':
     # 2 clusters in R^2:
@@ -356,7 +356,9 @@ def gaussian3_mix_clusters_per_client(params, random_state=42):
     # # new_y2 = np.concatenate([y1[indices3], y2[indices4]], axis=0)
     # new_y2 = np.ones((new_X2.shape[0],))
     # X1, y1, X2, y2 = new_X1, new_y1, new_X2, new_y2
-    if 2* ratio <= 0 or 2 * ratio >= 1:
+    if 'Centralized' in params['p2']:  # for Centralized Kmeans, ratios should have no impact.
+        pass
+    elif 2 * ratio <= 0 or 2 * ratio >= 1:
         pass
     else:
         # client 1: 90% cluster1, 10 % cluster2, 10 % cluster3
@@ -394,7 +396,7 @@ def gaussian3_mix_clusters_per_client(params, random_state=42):
         fig, ax = plt.subplots()
         # colors = ["#4EACC5", "#FF9C34", "#4E9A06", "m"]
         colors = ["r", "g", "b", "m", 'black']
-        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='centroid_1')
+        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='$G_{11}$')
         p = np.mean(X1, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -409,7 +411,7 @@ def gaussian3_mix_clusters_per_client(params, random_state=42):
         # angleA : starting angle of the path
         # angleB : ending angle of the path
 
-        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='centroid_2')
+        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='$G_{12}$')
         p = np.mean(X2, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -421,7 +423,7 @@ def gaussian3_mix_clusters_per_client(params, random_state=42):
                     arrowprops=dict(arrowstyle="->", color='r', shrinkA=1, lw=2,
                                     connectionstyle="angle3, angleA=90,angleB=0"))
 
-        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='centroid_3')
+        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='$G_{13}$')
         p = np.mean(X3, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -435,18 +437,27 @@ def gaussian3_mix_clusters_per_client(params, random_state=42):
 
         ax.axvline(x=0, color='k', linestyle='--')
         ax.axhline(y=0, color='k', linestyle='--')
-        ax.legend(loc='upper right')
-        plt.title(params['p1'])
-        # # plt.xlim([-2, 15])
-        # # plt.ylim([-2, 15])
-        plt.xlim([-6, 6])
-        plt.ylim([-6, 6])
-        # # plt.xticks([])
-        # # plt.yticks([])
+        ax.legend(loc='upper right', fontsize = 13)
+        if params['show_title']:
+            plt.title(params['p1'])
+
+        if 'xlim' in kwargs:
+            plt.xlim(kwargs['xlim'])
+        else:
+            plt.xlim([-6, 6])
+        if 'ylim' in kwargs:
+            plt.ylim(kwargs['ylim'])
+        else:
+            plt.ylim([-6, 6])
+        fontsize = 13
+        plt.xticks(fontsize = fontsize)
+        plt.yticks(fontsize = fontsize)
+
         plt.tight_layout()
         if not os.path.exists(params['out_dir']):
             os.makedirs(params['out_dir'])
         f = os.path.join(params['out_dir'], params['p1']+'.png')
+        print(f)
         plt.savefig(f, dpi=600, bbox_inches='tight')
         plt.show()
 
@@ -557,7 +568,7 @@ def gaussian3_1client_ylt0(params, random_state=42):
         fig, ax = plt.subplots()
         # colors = ["#4EACC5", "#FF9C34", "#4E9A06", "m"]
         colors = ["r", "g", "b", "m", 'black']
-        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='centroid_1')
+        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='Centroid 1')
         p = np.mean(X1, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -572,7 +583,7 @@ def gaussian3_1client_ylt0(params, random_state=42):
         # angleA : starting angle of the path
         # angleB : ending angle of the path
 
-        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='centroid_2')
+        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='Centroid 2')
         p = np.mean(X2, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -584,7 +595,7 @@ def gaussian3_1client_ylt0(params, random_state=42):
                     arrowprops=dict(arrowstyle="->", color='r', shrinkA=1, lw=2,
                                     connectionstyle="angle3, angleA=90,angleB=0"))
 
-        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='centroid_3')
+        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='Centroid 3')
         p = np.mean(X3, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -717,7 +728,7 @@ def gaussian3_1client_xlt0(params, random_state=42):
         fig, ax = plt.subplots()
         # colors = ["#4EACC5", "#FF9C34", "#4E9A06", "m"]
         colors = ["r", "g", "b", "m", 'black']
-        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='centroid_1')
+        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='Centroid 1')
         p = np.mean(X1, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -732,7 +743,7 @@ def gaussian3_1client_xlt0(params, random_state=42):
         # angleA : starting angle of the path
         # angleB : ending angle of the path
 
-        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='centroid_2')
+        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='Centroid 2')
         p = np.mean(X2, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -744,7 +755,7 @@ def gaussian3_1client_xlt0(params, random_state=42):
                     arrowprops=dict(arrowstyle="->", color='r', shrinkA=1, lw=2,
                                     connectionstyle="angle3, angleA=90,angleB=0"))
 
-        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='centroid_3')
+        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='Centroid 3')
         p = np.mean(X3, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -875,7 +886,7 @@ def gaussian3_1client_1cluster_diff_sigma(params, random_state=42):
         fig, ax = plt.subplots()
         # colors = ["#4EACC5", "#FF9C34", "#4E9A06", "m"]
         colors = ["r", "g", "b", "m", 'black']
-        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='centroid_1')
+        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='Centroid 1')
         p = np.mean(X1, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -890,7 +901,7 @@ def gaussian3_1client_1cluster_diff_sigma(params, random_state=42):
         # angleA : starting angle of the path
         # angleB : ending angle of the path
 
-        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='centroid_2')
+        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='Centroid 2')
         p = np.mean(X2, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -902,7 +913,7 @@ def gaussian3_1client_1cluster_diff_sigma(params, random_state=42):
                     arrowprops=dict(arrowstyle="->", color='r', shrinkA=1, lw=2,
                                     connectionstyle="angle3, angleA=90,angleB=0"))
 
-        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='centroid_3')
+        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='Centroid 3')
         p = np.mean(X3, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -953,7 +964,7 @@ def gaussian3_1client_1cluster_diff_sigma(params, random_state=42):
 # gaussian3_1client_1cluster({})
 
 
-def gaussian3_diff_sigma_n(params, random_state=42):
+def gaussian3_diff_sigma_n(args, random_state=42, **kwargs):
     """
     # 2 clusters ((-1,0), (1, 0)) in R^2, each client has one cluster. 2 clusters has no overlaps.
     cluster 1: sigma = 0.1 and n_points = 5000
@@ -968,21 +979,25 @@ def gaussian3_diff_sigma_n(params, random_state=42):
     -------
 
     """
-    p1 = params['p1'].split(':')   # 'n1_100-sigma1_0.1+n2_5000-sigma2_0.2+n3_10000-sigma3_0.3:ratio_0.1:diff_sigma_n'
+    dataset_detail = args['DATASET']['detail']   # 'n1_100-sigma1_0.1+n2_5000-sigma2_0.2+n3_10000-sigma3_0.3:ratio_0.1:diff_sigma_n'
+    p1 = dataset_detail.split(':')
     ratio = float(p1[1].split('_')[1])
 
     p1_0 = p1[0].split('+')     # 'n1_100-sigma1_0.1, n2_1000-sigma2_0.2, n3_10000-sigma3_0.3
     p1_0_c1 = p1_0[0].split('-')
     n1 = int(p1_0_c1[0].split('_')[1])
-    sigma1 = float(p1_0_c1[1].split('_')[1])
+    tmp = p1_0_c1[1].split('_')
+    sigma1_0, sigma1_1 = float(tmp[1]), float(tmp[2])
 
     p1_0_c2 = p1_0[1].split('-')
     n2 = int(p1_0_c2[0].split('_')[1])
-    sigma2 = float(p1_0_c2[1].split('_')[1])
+    tmp = p1_0_c2[1].split('_')
+    sigma2_0, sigma2_1 = float(tmp[1]), float(tmp[2])
 
     p1_0_c3 = p1_0[2].split('-')
     n3 = int(p1_0_c3[0].split('_')[1])
-    sigma3 = float(p1_0_c3[1].split('_')[1])
+    tmp = p1_0_c3[1].split('_')
+    sigma3_0, sigma3_1 = float(tmp[1]), float(tmp[2])
 
     def get_xy(n=0):
 
@@ -990,7 +1005,7 @@ def gaussian3_diff_sigma_n(params, random_state=42):
         mus = [-1, 0]
         # sigma = 0.1
         # n1 = 2000
-        cov = np.asarray([[sigma1, 0], [0, sigma1]])
+        cov = np.asarray([[sigma1_0, 0], [0, sigma1_1]])
         # cov = np.asarray([[sigma, sigma], [sigma, sigma]])
         r = np.random.RandomState(random_state)
         X1 = r.multivariate_normal(mus, cov, size=n1)
@@ -1000,7 +1015,7 @@ def gaussian3_diff_sigma_n(params, random_state=42):
         mus = [1, 0]
         # sigma = 0.2
         # n2 = 5000
-        cov = np.asarray([[sigma2, 0], [0, sigma2]])
+        cov = np.asarray([[sigma2_0, 0], [0, sigma2_1]])
         # cov = np.asarray([[sigma, -sigma], [-sigma, sigma]])
         X2 = r.multivariate_normal(mus, cov, size=n2)
         y2 = np.asarray([1] * n2)
@@ -1009,7 +1024,7 @@ def gaussian3_diff_sigma_n(params, random_state=42):
         mus = [0, 3]
         # n3 = 10000
         # sigma = 0.3
-        cov = np.asarray([[sigma3, 0], [0, sigma3]])
+        cov = np.asarray([[sigma3_0, 0], [0, sigma3_1]])
         X3 = r.multivariate_normal(mus, cov, size=n3)
         y3 = np.asarray([2] * n3)
 
@@ -1026,7 +1041,9 @@ def gaussian3_diff_sigma_n(params, random_state=42):
         return X1, y1, X2, y2, X3, y3
 
     X1, y1, X2, y2, X3, y3 = get_xy()
-    if 2* ratio <= 0 or 2* ratio >= 1:
+    if 'Centralized' in args['ALGORITHM']['py_name']:   # for Centralized Kmeans, ratios should have no impact.
+        pass
+    elif 2* ratio <= 0 or 2* ratio >= 1:
         pass
     else:
         # client 1: 90% cluster1, 10 % cluster2, 10 % cluster3
@@ -1048,24 +1065,25 @@ def gaussian3_diff_sigma_n(params, random_state=42):
                                                                   random_state=random_state)
 
         X1 = np.concatenate([train_x1, test_x21, test_x31], axis=0)
-        # y1 = np.concatenate([train_y1, test_y2], axis=0) # be careful of this
-        y1 = np.zeros((X1.shape[0],))
+        y1 = np.concatenate([train_y1, test_y21, test_y31], axis=0)  # be careful of this
+        # y1 = np.zeros((X1.shape[0],))
 
         X2 = np.concatenate([test_x11, train_x2, test_x32], axis=0)
-        # y2 = np.concatenate([test_y1, train_y2], axis=0)
-        y2 = np.ones((X2.shape[0],))
+        y2 = np.concatenate([test_y11, train_y2, test_y32], axis=0)
+        # y2 = np.ones((X2.shape[0],))
 
         X3 = np.concatenate([test_x12, test_x22, train_x3], axis=0)
-        y3 = np.ones((X3.shape[0],)) * 2
+        y3 = np.concatenate([test_y12, test_y22, train_y3], axis=0)
+        # y3 = np.ones((X3.shape[0],)) * 2
 
 
-    is_show = params['is_show']
+    is_show = args['IS_SHOW']
     if is_show:
         # Plot init seeds along side sample data
         fig, ax = plt.subplots()
         # colors = ["#4EACC5", "#FF9C34", "#4E9A06", "m"]
         colors = ["r", "g", "b", "m", 'black']
-        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='centroid_1')
+        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='$G_1$')
         p = np.mean(X1, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -1080,7 +1098,7 @@ def gaussian3_diff_sigma_n(params, random_state=42):
         # angleA : starting angle of the path
         # angleB : ending angle of the path
 
-        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='centroid_2')
+        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='$G_2$')
         p = np.mean(X2, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -1092,7 +1110,7 @@ def gaussian3_diff_sigma_n(params, random_state=42):
                     arrowprops=dict(arrowstyle="->", color='r', shrinkA=1, lw=2,
                                     connectionstyle="angle3, angleA=90,angleB=0"))
 
-        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='centroid_3')
+        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='$G_3$')
         p = np.mean(X3, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -1106,18 +1124,29 @@ def gaussian3_diff_sigma_n(params, random_state=42):
 
         ax.axvline(x=0, color='k', linestyle='--')
         ax.axhline(y=0, color='k', linestyle='--')
-        ax.legend(loc='upper right')
-        plt.title(params['p1'].replace(':', '\n'))
-        # # plt.xlim([-2, 15])
-        # # plt.ylim([-2, 15])
-        plt.xlim([-6, 6])
-        plt.ylim([-6, 6])
-        # # plt.xticks([])
-        # # plt.yticks([])
+        ax.legend(loc='upper right', fontsize = 13)
+        if args['SHOW_TITLE']:
+            plt.title(dataset_detail.replace(':', '\n'))
+
+        if 'xlim' in kwargs:
+            plt.xlim(kwargs['xlim'])
+        else:
+            plt.xlim([-6, 6])
+        if 'ylim' in kwargs:
+            plt.ylim(kwargs['ylim'])
+        else:
+            plt.ylim([-6, 6])
+
+        fontsize = 13
+        plt.xticks(fontsize=fontsize)
+        plt.yticks(fontsize=fontsize)
+
         plt.tight_layout()
-        if not os.path.exists(params['out_dir']):
-            os.makedirs(params['out_dir'])
-        f = os.path.join(params['out_dir'], params['p1']+'.png')
+        # if not os.path.exists(params['OUT_DIR']):
+        #     os.makedirs(params['OUT_DIR'])
+        # f = os.path.join(args['OUT_DIR'], dataset_detail+'.png')
+        f = args['data_file'] + '.png'
+        print(f)
         plt.savefig(f, dpi=600, bbox_inches='tight')
         plt.show()
 
@@ -1126,7 +1155,7 @@ def gaussian3_diff_sigma_n(params, random_state=42):
     clients_test_x = []
     clients_test_y = []
     for i, (x, y) in enumerate([(X1, y1), (X2, y2), (X3, y3)]):
-        train_x, test_x, train_y, test_y = train_test_split(x, y, test_size=0.3, shuffle=True,
+        train_x, test_x, train_y, test_y = train_test_split(x, y, test_size=2, shuffle=True,
                                                             random_state=random_state)
         clients_train_x.append(train_x)
         clients_train_y.append(train_y)
@@ -1236,7 +1265,7 @@ def gaussian3_1client_xlt0_2(params, random_state=42):
         fig, ax = plt.subplots()
         # colors = ["#4EACC5", "#FF9C34", "#4E9A06", "m"]
         colors = ["r", "g", "b", "m", 'black']
-        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='centroid_1')
+        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='Centroid 1')
         p = np.mean(X1, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -1251,7 +1280,7 @@ def gaussian3_1client_xlt0_2(params, random_state=42):
         # angleA : starting angle of the path
         # angleB : ending angle of the path
 
-        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='centroid_2')
+        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='Centroid 2')
         p = np.mean(X2, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3
@@ -1263,7 +1292,7 @@ def gaussian3_1client_xlt0_2(params, random_state=42):
                     arrowprops=dict(arrowstyle="->", color='r', shrinkA=1, lw=2,
                                     connectionstyle="angle3, angleA=90,angleB=0"))
 
-        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='centroid_3')
+        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='Centroid 3')
         p = np.mean(X3, axis=0)
         ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
         offset = 0.3

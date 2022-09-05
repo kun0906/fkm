@@ -174,7 +174,7 @@ def gaussian10_diff_sigma_n(args, random_state=42, **kwargs):
 		offset = 5
 		# xytext = (p[0] + (offset / 2 if p[0] >= 0 else -offset), p[1] + (offset / 2 if p[1] >= 0 else -offset))
 		xytext = (p[0], p[1] - offset)
-		print(xytext)
+		# print(xytext)
 		ax.annotate(f'({p[0]:.1f}, {p[1]:.1f})', xy=(p[0], p[1]), xytext=xytext, fontsize=15, color='b',
 		            ha='center', va='center',  # textcoords='offset points',
 		            bbox=dict(facecolor='none', edgecolor='b', pad=1),

@@ -54,8 +54,8 @@ def parser_history(args):
 				final_centroids_lst = []
 				durations = []
 				for seed in SEEDS:
-					if history[seed]['scores'][split]['n_clusters'] != history[seed]['scores'][split]['n_clusters_pred']:
-						continue
+					# if history[seed]['scores'][split]['n_clusters'] != history[seed]['scores'][split]['n_clusters_pred']:
+					# 	continue
 					initial_centroids+=[[ f'{v:.5f}' for v in vs ] for vs in history[seed]['initial_centroids']]
 					final_centroids += [[ f'{v:.5f}' for v in vs ] for vs in history[seed]['final_centroids']]
 					final_centroids_lst += ['(' + ', '.join(f'{v:.5f}' for v in vs) + ')' for vs in history[seed]['final_centroids']]
@@ -76,12 +76,13 @@ def parser_history(args):
 			for metric_name in metric_names:
 				value = []
 				for seed in SEEDS:
-					if history[seed]['scores'][split]['n_clusters'] != history[seed]['scores'][split]['n_clusters_pred']:
-						warnings.warn(f'n_clusters!=n_clusters_pred')
-						continue
+					# if history[seed]['scores'][split]['n_clusters'] != history[seed]['scores'][split]['n_clusters_pred']:
+					# 	warnings.warn(f'n_clusters!=n_clusters_pred')
+					# 	continue
 					value.append(history[seed]['scores'][split][metric_name])
 				if metric_name in ['labels_pred', 'labels_true', 'n_clusters', 'n_clusters_pred']:
-					results_avg[split][metric_name] = [history[seed]['scores'][split][metric_name] for seed in SEEDS if history[seed]['scores'][split]['n_clusters'] == history[seed]['scores'][split]['n_clusters_pred']]
+					# results_avg[split][metric_name] = [history[seed]['scores'][split][metric_name] for seed in SEEDS if history[seed]['scores'][split]['n_clusters'] == history[seed]['scores'][split]['n_clusters_pred']]
+					results_avg[split][metric_name] = [history[seed]['scores'][split][metric_name] for seed in SEEDS]
 					# s += f'\t{metric_name}: {value}\n'
 					continue
 				try:
@@ -587,6 +588,7 @@ def main2():
 	tot_cnt = 0
 	sheet_names = set()
 	dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
+	dataset_names = ['10GAUSSIANS']
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension

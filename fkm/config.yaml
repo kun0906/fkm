@@ -13,7 +13,7 @@ SEPERTOR: '|'
 OVERWRITE: True
 
 N_REPEATS: 5
-NORMALIZE_METHOD: 'std'   # std (default), min-max
+NORMALIZE_METHOD: 'std'   # std (default), min-max, None
 N_CLIENTS: 2
 N_CLUSTERS: 2
 IS_FEDERATED: False

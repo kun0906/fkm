@@ -214,16 +214,19 @@ def normalize(raw_x, raw_y, raw_true_centroids, splits, params):
 		# 	elif '4GAUSSIANS' in algorithm_name:  # for plotting
 		# 		plot_2gaussian(new_x['train'][0], new_y['train'], new_x['train'][1], new_y['train'][1],
 		# 		               params, title='std')
+	elif normalize_method == 'min_max':
+		raise NotImplementedError
 	else:
-		new_x, new_y, new_true_centroids = raw_x, raw_y, raw_true_centroids
-		# collects all clients' data together and get global stdscaler
-		x = copy.deepcopy(raw_x)
-		y = copy.deepcopy(raw_y)
-		for spl in splits:  # train and test
-			x[spl] = np.concatenate(x[spl], axis=0)
-
-		global_stdscaler = StandardScaler()  # we can get the same global_stdscaler using each client mean and std.
-		global_stdscaler.fit(x['train'])
+		# new_x, new_y, new_true_centroids = raw_x, raw_y, raw_true_centroids
+		# # collects all clients' data together and get global stdscaler
+		# x = copy.deepcopy(raw_x)
+		# y = copy.deepcopy(raw_y)
+		# for spl in splits:  # train and test
+		# 	x[spl] = np.concatenate(x[spl], axis=0)
+		#
+		# global_stdscaler = StandardScaler()  # we can get the same global_stdscaler using each client mean and std.
+		# global_stdscaler.fit(x['train'])
+		return raw_x, raw_y, raw_true_centroids, None
 
 	return new_x, new_y, new_true_centroids, global_stdscaler
 
@@ -307,7 +310,7 @@ def run_model(args):
 		# print true centroids
 		for split in SPLITS:
 			true_c = raw_true_centroids[split]
-			print(f'{split}_true_centroids: {true_c}')
+			print(f'{split}_true_centroids:\n{true_c}')
 
 	# if algorithm_name == 'FEMNIST':
 	# 	save_image2disk((raw_x, raw_y), out_dir_i, params)
@@ -331,8 +334,8 @@ def run_model(args):
 	}
 	for idx_seed, seed in enumerate(SEEDS):  # repetitions:  to obtain average and std score.
 
-		if VERBOSE >= 2:
-			print(f'\n***{idx_seed}th repeat with seed: {seed}:')
+		# if VERBOSE >= 2:
+		print(f'\n***{idx_seed}th repeat with seed: {seed}:')
 		X = copy.deepcopy(raw_x)
 		Y = copy.deepcopy(raw_y)
 		true_centroids = copy.deepcopy(raw_true_centroids)
@@ -393,7 +396,7 @@ def run_model(args):
 		# # traceback.print_exc()
 
 		t2 = time.time()
-		print(f'{idx_seed}th iteration takes {(t2 - t1):.4f}s')
+		print(f'{idx_seed}th repeat with seed {seed} takes {(t2 - t1):.4f}s')
 
 		# for each seed, we will save the results.
 		history[seed] = {'initial_centroids': kmeans.initial_centroids,

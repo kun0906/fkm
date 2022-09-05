@@ -56,13 +56,15 @@ def check_centroids(centroids, clients_in_round):
 		topk = sorted(client_farthest_points, key=lambda x: x[2], reverse=True)[:len(centroids)]
 		farthest_points.extend(topk)
 
-	print(f'before adjustment of centroids ({len(centroids)}), each centroid have the number of points', centroids_info)
+	print(f'before adjustment of valid centroids ({len([1 for cnt_ in centroids_info if cnt_ > 0 ])}), each centroid have the number of points', centroids_info)
 	farthest_points = sorted(farthest_points, key=lambda x: x[2], reverse=True)   # only needs keep the top k data and send them back to the server
 	for i, cnt in enumerate(centroids_info):
 		if cnt == 0:
 			i_cluster, _, d_, point_ = farthest_points.pop(0)
+			while centroids_info[i_cluster] <= 1:
+				i_cluster, _, d_, point_ = farthest_points.pop(0)
 			centroids[i] = point_
 			centroids_info[i_cluster] -= 1
 			centroids_info[i] += 1
-	print(f'After adjustment of centroids ({len(centroids)}), each centroid have the number of points', centroids_info)
+	print(f'After adjustment of centroids ({len([1 for cnt_ in centroids_info if cnt_ > 0 ])}), each centroid have the number of points', centroids_info)
 	return centroids

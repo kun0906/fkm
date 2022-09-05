@@ -11,7 +11,12 @@ import sklearn
 from sklearn.model_selection import train_test_split
 
 from fkm.utils import utils_func
-
+# find the max_words
+import nltk
+try:
+	from nltk.corpus import stopwords
+except ImportError as e:
+	nltk.download('stopwords')
 
 def get_size(obj, unit='GB'):
 	"""
@@ -193,6 +198,17 @@ def sent140_user_percent(args={}, random_state=42):
 
 
 def sent140_diff_sigma_n(args, random_state=42):
+	"""
+	# cp /scratch/gpfs/ky8517/leaf-torch/data/sent140 /scratch/gpfs/ky8517/fkm/datasets/sent140
+	Parameters
+	----------
+	args
+	random_state
+
+	Returns
+	-------
+
+	"""
 	n_clients = args['N_CLIENTS']
 	dataset_detail = args['DATASET']['detail']  # 'nbaiot_user_percent_client:ratio_0.1'
 	p1 = dataset_detail.split(':')
@@ -212,7 +228,6 @@ def sent140_diff_sigma_n(args, random_state=42):
 	# 	return utils_func.load(data_file)
 
 	DATASET_SETTING = 'all_data_niid_5_keep_50_train_9'
-	# cp /scratch/gpfs/ky8517/leaf-torch/data/femnist /scratch/gpfs/ky8517/fkm/datasets/femnist
 	embs_file = 'datasets/SENT140/glove.6B.50d.txt'
 	print(os.path.abspath(embs_file))
 	print(f'Load {embs_file}...')
@@ -230,11 +245,6 @@ def sent140_diff_sigma_n(args, random_state=42):
 	UNKNOWN = "++++++++++++++++++++++++?????????????????????"
 	w2v[UNKNOWN] = [0] * 50
 	print('Load completed.')
-
-	# find the max_words
-	import nltk
-	nltk.download('stopwords')
-	from nltk.corpus import stopwords
 
 	STOPWORDS = set(stopwords.words())  # speed up the check
 

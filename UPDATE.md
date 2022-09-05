@@ -1,4 +1,13 @@
 
+
+# Updates: version 0.3.6 (20220906)
+- Modify the solution for empty clusters according to the initial centroids. 
+  Assign the farthest points to the centroids that have no points (https://github.com/klebenowm/cs540/blob/master/hw1/KMeans.java)
+- Update latex_plot.py 
+
+  
+
+
 # Updates: version 0.3.5 (20220823)
 - Rewrite the whole code and adjust the project structure.  
 - Add config.yaml

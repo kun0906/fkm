@@ -1,3 +1,7 @@
+.idea/
+/**/__pycache__/*
+
+
 /federated_kmeans/
 /federated_kmeans_Stanford/
 /fkm_old/
@@ -5,9 +9,19 @@
 /fkm/legacy /
 /federated_kmeans_Stanford/
 
-
+*.dat
+*.png
+**/.DS_Store
+.gitignore
 
 !/start_fkm.sh
 
 !/gpu.sh
 /.pytest_cache/
+/fkm/datasets/3GAUSSIANS/
+/fkm/datasets/10GAUSSIANS/
+/fkm/datasets/FEMNIST/
+/fkm/datasets/NBAIOT/
+/fkm/datasets/SENT140/
+/fkm/out/
+

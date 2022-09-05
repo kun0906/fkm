@@ -1059,7 +1059,7 @@ def gaussian3_diff_sigma_n(args, random_state=42, **kwargs):
         test_x21, test_x22, test_y21, test_y22 = train_test_split(X2, y2, test_size=0.5, shuffle=True,
                                                                   random_state=random_state)
 
-        train_x3, X3, train_y3, y3 = train_test_split(X3, y3, test_size=2* ratio, shuffle=True,
+        train_x3, X3, train_y3, y3 = train_test_split(X3, y3, test_size= 2* ratio, shuffle=True,
                                                       random_state=random_state)
         test_x31, test_x32, test_y31, test_y32 = train_test_split(X3, y3, test_size=0.5, shuffle=True,
                                                                   random_state=random_state)
@@ -1089,7 +1089,7 @@ def gaussian3_diff_sigma_n(args, random_state=42, **kwargs):
         offset = 0.3
         # xytext = (p[0] + (offset / 2 if p[0] >= 0 else -offset), p[1] + (offset / 2 if p[1] >= 0 else -offset))
         xytext = (p[0] - offset, p[1] - offset)
-        print(xytext)
+        # print(xytext)
         ax.annotate(f'({p[0]:.1f}, {p[1]:.1f})', xy=(p[0], p[1]), xytext=xytext, fontsize=15, color='b',
                     ha='center', va='center',  # textcoords='offset points',
                     bbox=dict(facecolor='none', edgecolor='b', pad=1),

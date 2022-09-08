@@ -22,7 +22,7 @@ from fkm.utils.utils_stats import evaluate2, plot_progress
 # These options determine the way floating point numbers, arrays and
 # other NumPy objects are displayed.
 # np.set_printoptions(precision=3, suppress=True)
-np.set_printoptions(precision=3, suppress=True, formatter={'float': '{:20.3f}'.format}, edgeitems = 120, linewidth=100000)
+# np.set_printoptions(precision=3, suppress=True, formatter={'float': '{:20.3f}'.format}, edgeitems = 120, linewidth=100000)
 
 def compute_step_for_client(client_data, centroids):
     # compute distances

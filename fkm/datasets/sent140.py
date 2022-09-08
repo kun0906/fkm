@@ -1,5 +1,8 @@
 """
-
+	1. Download leaf from github:
+	2. cd data/sent140
+	3. ./preprocess.sh
+	4. cp train test to here
 """
 import collections
 import json
@@ -134,11 +137,6 @@ def sent140_user_percent(args={}, random_state=42):
 	UNKNOWN = "++++++++++++++++++++++++?????????????????????"
 	w2v[UNKNOWN] = [0] * 50
 	print('Load completed.')
-
-	# find the max_words
-	import nltk
-	nltk.download('stopwords')
-	from nltk.corpus import stopwords
 
 	STOPWORDS = set(stopwords.words())  # speed up the check
 

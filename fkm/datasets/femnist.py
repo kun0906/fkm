@@ -6,6 +6,9 @@ FEMNIST:
     n_images per writer: 226.83 (mean)	88.94 (std)
 https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_plusplus.html#sphx-glr-auto-examples-cluster-plot-kmeans-plusplus-py
 
+    https://www.kaggle.com/datasets/crawford/emnist?select=emnist-byclass-train.csv
+
+
 """
 import collections
 import json
@@ -463,3 +466,136 @@ def femnist_1client_multiwriters_1digit(params={}, random_state=42):
     # print(f'n_test_clients: {len(clients_test_x)}, n_datapoints: {sum(len(vs) for vs in clients_test_y)}, '
     #       f'cluster_size: {sorted(Counter(y_tmp).items(), key=lambda kv: kv[0], reverse=False)}')
     return x, labels
+
+
+def preprocess_femnist(in_dir = 'datasets/FEMNIST/raw_data/by_write'):
+
+    """
+    https://www.kaggle.com/datasets/crawford/emnist?select=emnist-byclass-train.csv
+
+
+    Reference:
+        NIST Special Database 19 Handprinted Forms and Characters Database
+        https://s3.amazonaws.com/nist-srd/SD19/1stEditionUserGuide.pdf
+
+        Under "by_write/hsf_0/f0000_14/"
+            digit, upper, lower, const and the prefixes “d”, “u”, “l” and “c”.
+
+        f0000_14:
+            The universal descripton of a writer on this database is of the form fyyyy_zz. For example the directory f3100_45
+uniquely identifies writer 3100 and the second index, 45, identifies which of the 100 possible form templates was
+used in the form image
+
+    Creates .pkl files for:
+    1. list of directories of every image in 'by_class'
+    2. list of directories of every image in 'by_write'
+    the hierarchal structure of the data is as follows:
+    - by_class -> classes -> folders containing images -> images
+    - by_write -> folders containing writers -> writer -> types of images -> images
+    the directories written into the files are of the form 'raw_data/...'
+
+
+    Parameters
+    ----------
+    in_dir
+
+    Returns
+    -------
+
+    """
+
+    import PIL
+
+    writers = collections.defaultdict(list)
+    cnt = 0
+    for sub_dir in os.listdir(in_dir):
+        d1 = os.path.join(in_dir, sub_dir)
+        if not os.path.isdir(d1): continue
+        for writer_name in os.listdir(d1):
+            d2 = os.path.join(d1, writer_name)
+            if not os.path.isdir(d2): continue
+            for image_dir in os.listdir(d2):
+                d3 = os.path.join(d2, image_dir)
+                if not os.path.isdir(d3): continue
+                for image in os.listdir(d3):
+                    f = os.path.join(d3, image)
+                    if '.png' not in f : continue
+                    img = PIL.Image.open(f)
+                    gray = img.convert('L')
+                    size = (28, 28)
+                    gray.thumbnail(size, PIL.Image.ANTIALIAS)
+                    arr = np.asarray(gray).copy()
+                    X = arr.flatten()
+                    # vec = vec / 255  # scale all pixel values to between 0 and 1
+                    y = ''
+                    writers[writer_name].append((X, y))
+                    cnt += 1
+                    if cnt % 1000 == 0:
+                        print(f'cnt: {cnt}')
+                    break
+
+    out_file = os.path.join(in_dir, 'writers.dat')
+    with open(out_file, 'wb') as f:
+        pickle.dump(writers, f)
+
+    return writers
+
+
+
+    # write_dir = os.path.join(parent_path, 'data', 'raw_data', 'by_write')
+    # rel_write_dir = os.path.join('data', 'raw_data', 'by_write')
+    # write_parts = os.listdir(write_dir)
+    #
+    # for write_part in write_parts:
+    #     writers_dir = os.path.join(write_dir, write_part)
+    #     rel_writers_dir = os.path.join(rel_write_dir, write_part)
+    #     if os.path.isfile(writers_dir): continue
+    #     writers = os.listdir(writers_dir)
+    #
+    #     for writer in writers:
+    #         writer_dir = os.path.join(writers_dir, writer)
+    #         rel_writer_dir = os.path.join(rel_writers_dir, writer)
+    #         wtypes = os.listdir(writer_dir)
+    #
+    #         for wtype in wtypes:
+    #             type_dir = os.path.join(writer_dir, wtype)
+    #             rel_type_dir = os.path.join(rel_writer_dir, wtype)
+    #             images = os.listdir(type_dir)
+    #             image_dirs = [os.path.join(rel_type_dir, i) for i in images]
+    #
+    #             for image_dir in image_dirs:
+    #                 write_files.append((writer, image_dir))
+    #
+
+    # writer_count = 0
+    # for hsf in os.listdir(in_dir):
+    #     hsf = os.path.join(in_dir, hsf)
+    #     for
+    #     for w in []:
+    #         if w not in writers.keys():
+    #             writers[w] = []
+    #         else:
+    #             writers.append(w)
+    #         writer_count +=1
+    #
+    # print(f'total writes: {writer_count}')
+
+        # size = 28, 28  # original image size is 128, 128
+        # for (f, c) in l:
+        #     file_path = os.path.join(parent_path, f)
+        #     img = Image.open(file_path)
+        #     gray = img.convert('L')
+        #     gray.thumbnail(size, Image.ANTIALIAS)
+        #     arr = np.asarray(gray).copy()
+        #     vec = arr.flatten()
+        #     vec = vec / 255  # scale all pixel values to between 0 and 1
+        #     vec = vec.tolist()
+
+
+            # with open(file_path, 'w') as outfile:
+            #     json.dump(all_data, outfile)
+
+
+
+if __name__ == '__main__':
+    preprocess_femnist(in_dir = 'datasets/FEMNIST/raw_data')

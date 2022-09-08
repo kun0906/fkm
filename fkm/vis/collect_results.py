@@ -587,8 +587,9 @@ def main2():
 
 	tot_cnt = 0
 	sheet_names = set()
-	dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
-	dataset_names = ['10GAUSSIANS']
+	dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS',
+	                 'CHARFONT', 'GASSENSOR','DRYBEAN', 'SELFBACK','MNIST', 'BITCOIN']
+	# dataset_names = []
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
@@ -611,9 +612,15 @@ def main2():
 		N_CLUSTERS = dataset['n_clusters']
 		args1['N_CLIENTS'] = dataset['n_clients']
 		args1['N_CLUSTERS'] = dataset['n_clusters']
-		args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
-		                                                 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+		NORMALIZE_METHOD = args1['NORMALIZE_METHOD']
+		IS_PCA = args1['IS_PCA']
+		if args1['DATASET']['name'] == 'MNIST' and IS_PCA:
+			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}',
+				 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+		else:
+			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
 		dataset_detail = args1['DATASET']['detail']
+
 		args1['ALGORITHM']['n_clusters'] = dataset['n_clusters']
 		algorithms = get_algorithms_config_lst(py_names, dataset['n_clusters'])
 		for idx_alg, algorithm in enumerate(algorithms):
@@ -659,18 +666,21 @@ def main2():
 
 				# get csv file
 				csv_file = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '.csv')
-				csv_file2 = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '-detail.csv')
+				csv_file_detail = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '-detail.csv')
+				csv_file_topk = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '-topk.csv')
+				csv_file_topk_detail = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '-topk-detail.csv')
 				try:
 					csv_f = open(csv_file, 'w')
-					csv_f2 = open(csv_file2, 'w')
+					csv_f_detail = open(csv_file_detail, 'w')
+					csv_f_topk = open(csv_file_topk, 'w')
+					csv_f_topk_detail = open(csv_file_topk_detail, 'w')
 				except Exception as e:
 					traceback.print_exc()
 					break
 			try:
 				results_avg = parser_history(args2)
 				save2xls(workbook, worksheet, idx_alg, args2, results_avg)
-				# # only save the top 2 results
-				# results_avg = parser_history_topk(args2)
+
 				save2csv(csv_f, idx_alg, args2, results_avg, metric_names=['ari', 'ami', 'fm', 'vm',
 				                                                           'Iterations', 'durations', 'davies_bouldin',
 				                                                           'silhouette', 'ch', 'euclidean',
@@ -679,17 +689,40 @@ def main2():
 				                                                           ])
 				# save results detail
 				results_detail = parser_history2(args2)
-				save2csv2(csv_f2, idx_alg, args2, results_detail, metric_names=['ari', 'ami', 'fm', 'vm',
+				save2csv2(csv_f_detail, idx_alg, args2, results_detail, metric_names=['ari', 'ami', 'fm', 'vm',
+				                                                                      'Iterations', 'durations',
+				                                                                      'davies_bouldin',
+				                                                                      'silhouette', 'ch', 'euclidean',
+				                                                                      'n_clusters', 'n_clusters_pred',
+				                                                                      'labels_pred', 'labels_true'
+				                                                                      ])
+
+				# # only save the top 2 results
+				results_topk = parser_history_topk(args2)
+				save2csv(csv_f_topk, idx_alg, args2, results_topk, metric_names=['ari', 'ami', 'fm', 'vm',
 				                                                           'Iterations', 'durations', 'davies_bouldin',
 				                                                           'silhouette', 'ch', 'euclidean',
 				                                                           'n_clusters', 'n_clusters_pred',
-				                                                            'labels_pred', 'labels_true'
+				                                                           'labels_pred', 'labels_true'
 				                                                           ])
+
+				# # save results topk detail: To Do
+				# results_topk_detail = parser_history2(args2)
+				# save2csv2(csv_f_topk_detail, idx_alg, args2, results_topk_detail, metric_names=['ari', 'ami', 'fm', 'vm',
+				#                                                                       'Iterations', 'durations',
+				#                                                                       'davies_bouldin',
+				#                                                                       'silhouette', 'ch', 'euclidean',
+				#                                                                       'n_clusters', 'n_clusters_pred',
+				#                                                                       'labels_pred', 'labels_true'
+				#                                                                       ])
+
 			except Exception as e:
 				traceback.print_exc()
 			tot_cnt += 1
 		csv_f.close()
-		csv_f2.close()
+		csv_f_detail.close()
+		csv_f_topk.close()
+		csv_f_topk_detail.close()
 		workbook.close()
 	# break
 	print(f'*** Total cases: {tot_cnt}')

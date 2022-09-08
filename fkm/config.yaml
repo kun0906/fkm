@@ -14,6 +14,7 @@ OVERWRITE: True
 
 N_REPEATS: 5
 NORMALIZE_METHOD: 'std'   # std (default), min-max, None
+IS_PCA: True              # if True, NORMALIZE_METHOD cannot be "None"
 N_CLIENTS: 2
 N_CLUSTERS: 2
 IS_FEDERATED: False

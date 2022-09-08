@@ -187,8 +187,8 @@ def plot_P(ax, result_files, alg2abbrev, is_legend=False, y_name='Training Itera
 			flg = np.all(df_.iloc[:, 11] == df_.iloc[:, 12])
 			if not flg:
 				msg = f'n_clusters == n_clusters_pred ? {flg}'
-				print(msg)
-				return msg
+				warnings.warn(msg)
+				# return msg
 			df_ = df_.iloc[:, 0:11]
 			df_['p'] = [p] * df_.shape[0]
 		except Exception as e:
@@ -228,6 +228,7 @@ def plot_P(ax, result_files, alg2abbrev, is_legend=False, y_name='Training Itera
 	for i, (alg_true, alg_label) in enumerate(alg2abbrev.items()):
 		# print(alg_true, alg_label)
 		y, yerr = list(zip(*df[df['Algorithm'] == alg_true][y_name]))
+		print(x, y, yerr, alg_true, alg_label)
 		ax.errorbar(x, y, yerr=yerr, linestyle='-', marker='o', label=alg_label, lw=2, color=colors[i],
 		            ecolor=colors[i], elinewidth=1, capsize=2, alpha=1)
 
@@ -285,7 +286,7 @@ def plot_P(ax, result_files, alg2abbrev, is_legend=False, y_name='Training Itera
 	if CASE == 'Case 1':
 		ax.set_xlabel(f'$P$', fontsize=fontsize)
 	elif CASE == 'Case 2':
-		ax.set_xlabel(f'$N_3$', fontsize=fontsize)
+		ax.set_xlabel(f'$N_1$', fontsize=fontsize)
 
 
 def get_df(result_files):
@@ -628,7 +629,7 @@ if __name__ == '__main__':
 
 	ALG2ABBREV = {
 		f'centralized_kmeans|R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|{NORMALIZE_METHOD}': 'CKM++',
-		f'federated_server_init_first|R_{N_REPEATS}|random|None|{TOLERANCE}|{NORMALIZE_METHOD}': 'Server-Initialized',
+		f'federated_server_init_first|R_{N_REPEATS}|random|None|{TOLERANCE}|{NORMALIZE_METHOD}': 'Server-Random',
 		f'federated_server_init_first|R_{N_REPEATS}|min_max|None|{TOLERANCE}|{NORMALIZE_METHOD}': 'Server-MinMax',
 		f'federated_client_init_first|R_{N_REPEATS}|average|random|{TOLERANCE}|{NORMALIZE_METHOD}': 'Average-Random',
 		f'federated_client_init_first|R_{N_REPEATS}|average|kmeans++|{TOLERANCE}|{NORMALIZE_METHOD}': 'Average-KM++',
@@ -639,8 +640,11 @@ if __name__ == '__main__':
 	ratios = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.4999]
 
 	# dataset_name = 'FEMNIST'
-	# dataset_name = 'NBAIOT'
-	dataset_name = '3GAUSSIANS'
+	# dataset_name = 'NBAIOT'   # SENT140
+	# dataset_name = '3GAUSSIANS'
+	# dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'DRYBEAN', 'GASSENSOR','SELFBACK', 'MNIST']  #
+	dataset_name = 'MNIST'   # 'DRYBEAN',
+	is_topk = False  # only shows the top 2 results.
 
 	if dataset_name == '3GAUSSIANS':
 		n_clusters = 3
@@ -657,6 +661,39 @@ if __name__ == '__main__':
 								for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
 									dataset_detail = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
 									f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+									if is_topk:
+										f = f.replace('std.csv', 'std-topk.csv')
+									# dataset = {'name': dataset_name, 'detail': dataset_detail,  'p': n1, 'n_clients': n_clients, 'n_clusters':n_clusters, 'csv_file':f}
+									args1 = copy.deepcopy(args)
+									args1['csv_file'] = f
+									args1['p'] = ratio
+									SEED = args1['SEED']
+									args1['DATASET']['name'] = dataset_name
+									args1['DATASET']['detail'] = dataset_detail
+									args1['N_CLIENTS'] = n_clients
+									args1['N_CLUSTERS'] = n_clusters
+									N_CLIENTS = args1['N_CLIENTS']
+									N_CLUSTERS = args1['N_CLUSTERS']
+									args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
+									                                                 f'M_{N_CLIENTS}',
+									                                                 f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+								csv_files.append(copy.deepcopy(args1))
+		plot_real_case_P(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
+		exit()
+
+		csv_files = []
+		N = 5000  # total cases: 8*7
+		for ratio in ratios:
+			for n1 in [N]: #[50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+				for sigma1 in ["0.3_0.3"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+					for n2 in [N]:
+						for sigma2 in ["0.3_0.3"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+							for n3 in [N]:#[50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+								for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
+									dataset_detail = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
+									f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+									if is_topk:
+										f = f.replace('std.csv', 'std-topk.csv')
 									# dataset = {'name': dataset_name, 'detail': dataset_detail,  'p': n1, 'n_clients': n_clients, 'n_clusters':n_clusters, 'csv_file':f}
 									args1 = copy.deepcopy(args)
 									args1['csv_file'] = f
@@ -686,6 +723,8 @@ if __name__ == '__main__':
 								for sigma3 in ["0.3_0.3"]:  # sigma  = [[1, 0], [0, 0.1]]
 									dataset_detail = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
 									f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+									if is_topk:
+										f = f.replace('std.csv', 'std-topk.csv')
 									args1 = copy.deepcopy(args)
 									args1['csv_file'] = f
 									args1['p'] = n3
@@ -701,7 +740,7 @@ if __name__ == '__main__':
 									                                                 f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
 								csv_files.append(copy.deepcopy(args1))
 		plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
-		exit()
+		# exit()
 
 		csv_files = []
 		N = 5000  # total cases: 9*7
@@ -714,6 +753,8 @@ if __name__ == '__main__':
 								for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
 									dataset_detail = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
 									f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+									if is_topk:
+										f = f.replace('std.csv', 'std-topk.csv')
 									args1 = copy.deepcopy(args)
 									args1['csv_file'] = f
 									args1['p'] = n3
@@ -732,7 +773,7 @@ if __name__ == '__main__':
 
 	elif dataset_name == '10GAUSSIANS':
 		n_clients = 10
-		for n_clusters in [3, 10]:
+		for n_clusters in [10]:
 			csv_files = []
 			N = 5000
 			for ratio in ratios:
@@ -745,6 +786,7 @@ if __name__ == '__main__':
 									for sigma3 in ["0.3_0.3"]:  # sigma  = [[1, 0], [0, 0.1]]
 										dataset_detail = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
 										f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+										if is_topk: f = f.replace('std.csv', 'std-topk.csv')
 										args1 = copy.deepcopy(args)
 										args1['csv_file'] = f
 										args1['p'] = ratio
@@ -763,64 +805,66 @@ if __name__ == '__main__':
 			plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
 			# exit()
 
-			# csv_files = []
-			# N = 5000
-			# for ratio in [0.0]:
-			# 	for n1 in [N]:
-			# 		# for n1 in [500, 2000, 3000, 5000, 8000]:
-			# 		for sigma1 in ["0.1_0.1"]:
-			# 			for n2 in [N]:
-			# 				for sigma2 in ["0.2_0.2"]:
-			# 					for n3 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
-			# 						for sigma3 in ["0.3_0.3"]:
-			# 							dataset_detail = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
-			# 							f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
-			# 							args1 = copy.deepcopy(args)
-			# 							args1['csv_file'] = f
-			# 							args1['p'] = n3
-			# 							SEED = args1['SEED']
-			# 							args1['DATASET']['name'] = dataset_name
-			# 							args1['DATASET']['detail'] = dataset_detail
-			# 							args1['N_CLIENTS'] = n_clients
-			# 							args1['N_CLUSTERS'] = n_clusters
-			# 							N_CLIENTS = args1['N_CLIENTS']
-			# 							N_CLUSTERS = args1['N_CLUSTERS']
-			# 							args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
-			# 							                                                 f'M_{N_CLIENTS}',
-			# 							                                                 f'K_{N_CLUSTERS}',
-			# 							                                                 f'SEED_{SEED}'])
-			# 						csv_files.append(copy.deepcopy(args1))
-			# plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
-			# exit()
+			csv_files = []
+			N = 5000
+			for ratio in [0.0]:
+				for n1 in [N]:
+					# for n1 in [500, 2000, 3000, 5000, 8000]:
+					for sigma1 in ["0.1_0.1"]:
+						for n2 in [N]:
+							for sigma2 in ["0.2_0.2"]:
+								for n3 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+									for sigma3 in ["0.3_0.3"]:
+										dataset_detail = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
+										f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+										if is_topk: f = f.replace('std.csv', 'std-topk.csv')
+										args1 = copy.deepcopy(args)
+										args1['csv_file'] = f
+										args1['p'] = n3
+										SEED = args1['SEED']
+										args1['DATASET']['name'] = dataset_name
+										args1['DATASET']['detail'] = dataset_detail
+										args1['N_CLIENTS'] = n_clients
+										args1['N_CLUSTERS'] = n_clusters
+										N_CLIENTS = args1['N_CLIENTS']
+										N_CLUSTERS = args1['N_CLUSTERS']
+										args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
+										                                                 f'M_{N_CLIENTS}',
+										                                                 f'K_{N_CLUSTERS}',
+										                                                 f'SEED_{SEED}'])
+									csv_files.append(copy.deepcopy(args1))
+			plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
+			exit()
 
-			# csv_files = []
-			# N = 5000
-			# for ratio in [0.0]:
-			# 	for n1 in [N]:
-			# 		# for n1 in [500, 2000, 3000, 5000, 8000]:
-			# 		for sigma1 in ["0.1_0.1"]:
-			# 			for n2 in [N]:
-			# 				for sigma2 in ["0.1_0.1"]:
-			# 					for n3 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
-			# 						for sigma3 in ["1.0_0.1"]:
-			# 							dataset_detail = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
-			# 							f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
-			# 							args1 = copy.deepcopy(args)
-			# 							args1['csv_file'] = f
-			# 							args1['p'] = n3
-			# 							SEED = args1['SEED']
-			# 							args1['DATASET']['name'] = dataset_name
-			# 							args1['DATASET']['detail'] = dataset_detail
-			# 							args1['N_CLIENTS'] = n_clients
-			# 							args1['N_CLUSTERS'] = n_clusters
-			# 							N_CLIENTS = args1['N_CLIENTS']
-			# 							N_CLUSTERS = args1['N_CLUSTERS']
-			# 							args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
-			# 							                                                 f'M_{N_CLIENTS}',
-			# 							                                                 f'K_{N_CLUSTERS}',
-			# 							                                                 f'SEED_{SEED}'])
-			# 						csv_files.append(copy.deepcopy(args1))
-			# plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
+			csv_files = []
+			N = 5000
+			for ratio in [0.0]:
+				for n1 in [N]:
+					# for n1 in [500, 2000, 3000, 5000, 8000]:
+					for sigma1 in ["0.1_0.1"]:
+						for n2 in [N]:
+							for sigma2 in ["0.1_0.1"]:
+								for n3 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+									for sigma3 in ["1.0_0.1"]:
+										dataset_detail = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
+										f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+										if is_topk: f = f.replace('std.csv', 'std-topk.csv')
+										args1 = copy.deepcopy(args)
+										args1['csv_file'] = f
+										args1['p'] = n3
+										SEED = args1['SEED']
+										args1['DATASET']['name'] = dataset_name
+										args1['DATASET']['detail'] = dataset_detail
+										args1['N_CLIENTS'] = n_clients
+										args1['N_CLUSTERS'] = n_clusters
+										N_CLIENTS = args1['N_CLIENTS']
+										N_CLUSTERS = args1['N_CLUSTERS']
+										args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
+										                                                 f'M_{N_CLIENTS}',
+										                                                 f'K_{N_CLUSTERS}',
+										                                                 f'SEED_{SEED}'])
+									csv_files.append(copy.deepcopy(args1))
+			plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
 
 	elif dataset_name == 'FEMNIST':
 		csv_files = []
@@ -831,6 +875,7 @@ if __name__ == '__main__':
 			# there are 20 clients and each client has n users' data.
 			dataset_detail = f'n_{n}:ratio_0.00:diff_sigma_n'
 			f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+			if is_topk: f = f.replace('std.csv', 'std-topk.csv')
 			args1 = copy.deepcopy(args)
 			args1['csv_file'] = f
 			args1['p'] = n
@@ -858,6 +903,7 @@ if __name__ == '__main__':
 					for n3 in [2500]:
 						dataset_detail = f'n1_{n1}+n2_{n2}+n3_{n3}:ratio_{ratio:.2f}:diff_sigma_n'
 						f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+						if is_topk: f = f.replace('std.csv', 'std-topk.csv')
 						args1 = copy.deepcopy(args)
 						args1['csv_file'] = f
 						args1['p'] = ratio
@@ -885,6 +931,7 @@ if __name__ == '__main__':
 					for n3 in [2500]:
 						dataset_detail = f'n1_{n1}+n2_{n2}+n3_{n3}:ratio_{ratio:.2f}:diff_sigma_n'
 						f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+						if is_topk: f = f.replace('std.csv', 'std-topk.csv')
 						args1 = copy.deepcopy(args)
 						args1['csv_file'] = f
 						args1['p'] = ratio
@@ -911,6 +958,7 @@ if __name__ == '__main__':
 				for n2 in [N]:
 					dataset_detail = f'n1_{n1}+n2_{n2}:ratio_{ratio:.2f}:C_2_diff_sigma_n'
 					f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+					if is_topk: f = f.replace('std.csv', 'std-topk.csv')
 					args1 = copy.deepcopy(args)
 					args1['csv_file'] = f
 					args1['p'] = ratio
@@ -937,6 +985,7 @@ if __name__ == '__main__':
 			for n2 in [N]:
 				dataset_detail = f'n1_{n1}+n2_{n2}:ratio_0.00:C_2_diff_sigma_n'
 				f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+				if is_topk: f = f.replace('std.csv', 'std-topk.csv')
 				args1 = copy.deepcopy(args)
 				args1['csv_file'] = f
 				args1['p'] = n1
@@ -952,7 +1001,7 @@ if __name__ == '__main__':
 				                                                 f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
 			csv_files.append(copy.deepcopy(args1))
 		plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
-		exit()
+		# exit()
 	elif dataset_name == 'SENT140':
 		csv_files = []
 		n_clients = 20
@@ -961,6 +1010,7 @@ if __name__ == '__main__':
 			# there are 20 clients and each client has n users' data.
 			dataset_detail = f'n_{n}:ratio_0.00:diff_sigma_n'
 			f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+			if is_topk: f = f.replace('std.csv', 'std-topk.csv')
 			args1 = copy.deepcopy(args)
 			args1['csv_file'] = f
 			args1['p'] = n
@@ -977,22 +1027,163 @@ if __name__ == '__main__':
 			csv_files.append(copy.deepcopy(args1))
 		plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
 
+	elif dataset_name == 'MNIST':
+		csv_files = []
+		n_clients = 10
+		n_clusters = 10
+		for n in [50, 100, 500, 1000, 3000, 5000]:
+			dataset_detail = f'n_{n}:ratio_0.00:diff_sigma_n'
+			args1 = copy.deepcopy(args)
+			NORMALIZE_METHOD = args1['NORMALIZE_METHOD']
+			args1['DATASET']['name'] = dataset_name
+			IS_PCA = args1['IS_PCA']
+			if args1['DATASET']['name'] == 'MNIST' and IS_PCA:
+				f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|{NORMALIZE_METHOD}|PCA_{IS_PCA}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+			else:
+				f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+			if is_topk: f = f.replace('std.csv', 'std-topk.csv')
+			args1['csv_file'] = f
+			args1['p'] = n
+			SEED = args1['SEED']
+			args1['DATASET']['name'] = dataset_name
+			args1['DATASET']['detail'] = dataset_detail
+			args1['N_CLIENTS'] = n_clients
+			args1['N_CLUSTERS'] = n_clusters
+			N_CLIENTS = args1['N_CLIENTS']
+			N_CLUSTERS = args1['N_CLUSTERS']
+			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
+			                                                 f'M_{N_CLIENTS}',
+			                                                 f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+			csv_files.append(copy.deepcopy(args1))
+		plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
 
-# # plot dataset
-# params = {}
-# # gaussian3_1client_1cluster_diff_sigma(params, random_state=42)
-# gaussian3_mix_clusters_per_client(params, random_state=42, xlim=[-4, 4], ylim=[-2, 5])
-# gaussian3_diff_sigma_n(params, random_state=42, xlim=[-4, 4], ylim=[-2, 6])
-## # 1. GAUSSIANS
-	# dataset = {'name': '3GAUSSIANS', 'detail': 'diff_sigma_n', 'n_clusters': 3, 'n_clients': 3}
-	# plot_guassian_P(IN_DIR, OUT_DIR, ALG2ABBREV, dataset, N_REPEATS, TOLERANCE)
-	# plot_guassian_N(IN_DIR, OUT_DIR, ALG2ABBREV, dataset, N_REPEATS, TOLERANCE)
-	#
-	# dataset = {'name': '10GAUSSIANS', 'detail': 'diff_sigma_n', 'n_clusters': 10, 'n_clients': 10}
-	# plot_guassian_P(IN_DIR, OUT_DIR, ALG2ABBREV, dataset, N_REPEATS, TOLERANCE)
-	# plot_guassian_N(IN_DIR, OUT_DIR, ALG2ABBREV, dataset, N_REPEATS, TOLERANCE)
+	elif dataset_name == 'GASSENSOR':
+		csv_files = []
+		n_clients = 6
+		n_clusters = 6
+		tmp_list = []
+		for n in [50, 100, 500, 800, 1000, 1500]:
+			# p1 = f'n_{n}:ratio_0.00:diff_sigma_n'
+			dataset_detail = f'n_{n}:ratio_0.00:diff_sigma_n'
+			f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+			if is_topk: f = f.replace('std.csv', 'std-topk.csv')
+			args1 = copy.deepcopy(args)
+			args1['csv_file'] = f
+			args1['p'] = n
+			SEED = args1['SEED']
+			args1['DATASET']['name'] = dataset_name
+			args1['DATASET']['detail'] = dataset_detail
+			args1['N_CLIENTS'] = n_clients
+			args1['N_CLUSTERS'] = n_clusters
+			N_CLIENTS = args1['N_CLIENTS']
+			N_CLUSTERS = args1['N_CLUSTERS']
+			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
+			                                                 f'M_{N_CLIENTS}',
+			                                                 f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+			csv_files.append(copy.deepcopy(args1))
+		plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
 
-	# 2. real data
-	# dataset = {'name': 'NBAIOT', 'detail': None, 'n_clusters': 2, 'n_clients': 3}
-	# dataset = {'name': 'NBAIOT', 'detail': None, 'n_clusters': 2, 'n_clients': 2}
-	# dataset = {'name': 'SENT140', 'detail': None, 'n_clusters': 2, 'n_clients': 2}
+	elif dataset_name == 'CHARFONT':
+		csv_files = []
+		n_clients = 17
+		n_clusters = 17
+		tmp_list = []
+		for n in [50, 100, 500, 800, 1000, 1500, 3000]:
+			dataset_detail = f'n_{n}:ratio_0.00:diff_sigma_n'
+			f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+			if is_topk: f = f.replace('std.csv', 'std-topk.csv')
+			args1 = copy.deepcopy(args)
+			args1['csv_file'] = f
+			args1['p'] = n
+			SEED = args1['SEED']
+			args1['DATASET']['name'] = dataset_name
+			args1['DATASET']['detail'] = dataset_detail
+			args1['N_CLIENTS'] = n_clients
+			args1['N_CLUSTERS'] = n_clusters
+			N_CLIENTS = args1['N_CLIENTS']
+			N_CLUSTERS = args1['N_CLUSTERS']
+			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
+			                                                 f'M_{N_CLIENTS}',
+			                                                 f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+			csv_files.append(copy.deepcopy(args1))
+		plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
+
+	elif dataset_name == 'DRYBEAN':
+		csv_files = []
+		n_clients = 6
+		n_clusters = 6
+		tmp_list = []
+		for n in [50, 100, 500, 800, 1000]:
+			# there are 20 clients and each client has n users' data.
+			dataset_detail = f'n_{n}:ratio_0.00:diff_sigma_n'
+			f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+			if is_topk: f = f.replace('std.csv', 'std-topk.csv')
+			args1 = copy.deepcopy(args)
+			args1['csv_file'] = f
+			args1['p'] = n
+			SEED = args1['SEED']
+			args1['DATASET']['name'] = dataset_name
+			args1['DATASET']['detail'] = dataset_detail
+			args1['N_CLIENTS'] = n_clients
+			args1['N_CLUSTERS'] = n_clusters
+			N_CLIENTS = args1['N_CLIENTS']
+			N_CLUSTERS = args1['N_CLUSTERS']
+			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
+			                                                 f'M_{N_CLIENTS}',
+			                                                 f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+			csv_files.append(copy.deepcopy(args1))
+		plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
+
+	elif dataset_name == 'BITCOIN':
+		csv_files = []
+		n_clients = 4
+		n_clusters = 4
+		tmp_list = []
+		for n in [50, 500, 1000, 2000, 3000, 5000]:
+			# there are 20 clients and each client has n users' data.
+			dataset_detail = f'n_{n}:ratio_0.00:diff_sigma_n'
+			f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+			if is_topk: f = f.replace('std.csv', 'std-topk.csv')
+			args1 = copy.deepcopy(args)
+			args1['csv_file'] = f
+			args1['p'] = n
+			SEED = args1['SEED']
+			args1['DATASET']['name'] = dataset_name
+			args1['DATASET']['detail'] = dataset_detail
+			args1['N_CLIENTS'] = n_clients
+			args1['N_CLUSTERS'] = n_clusters
+			N_CLIENTS = args1['N_CLIENTS']
+			N_CLUSTERS = args1['N_CLUSTERS']
+			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
+			                                                 f'M_{N_CLIENTS}',
+			                                                 f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+			csv_files.append(copy.deepcopy(args1))
+		plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
+
+	elif dataset_name == 'SELFBACK':
+		csv_files = []
+		n_clients = 9
+		n_clusters = 9
+		tmp_list = []
+		for n in [50, 100, 500, 800, 1000, 1500, 2000]:
+			# there are 20 clients and each client has n users' data.
+			# p1 = f'n_{n}:ratio_0.00:diff_sigma_n'
+			dataset_detail = f'n_{n}:ratio_0.00:diff_sigma_n'
+			f = f'{IN_DIR}/{dataset_name}/{dataset_detail}|M_{n_clients}|K_{n_clusters}|SEED_42/R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|std.csv'
+			if is_topk: f = f.replace('std.csv', 'std-topk.csv')
+			args1 = copy.deepcopy(args)
+			args1['csv_file'] = f
+			args1['p'] = n
+			SEED = args1['SEED']
+			args1['DATASET']['name'] = dataset_name
+			args1['DATASET']['detail'] = dataset_detail
+			args1['N_CLIENTS'] = n_clients
+			args1['N_CLUSTERS'] = n_clusters
+			N_CLIENTS = args1['N_CLIENTS']
+			N_CLUSTERS = args1['N_CLUSTERS']
+			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
+			                                                 f'M_{N_CLIENTS}',
+			                                                 f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+			csv_files.append(copy.deepcopy(args1))
+		plot_real_case_N(IN_DIR, OUT_DIR, ALG2ABBREV, csv_files)
+

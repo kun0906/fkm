@@ -22,7 +22,7 @@ from fkm.utils.utils_stats import evaluate2
 # np.set_printoptions(precision=3, suppress=True)
 from fkm.vis.visualize import plot_2gaussian, plot_3gaussian
 
-np.set_printoptions(precision=3, suppress=True, formatter={'float': '{:20.3f}'.format}, edgeitems=120, linewidth=100000)
+np.set_printoptions(precision=3, suppress=True, formatter={'float': '{:.3f}'.format}, edgeitems=120, linewidth=100000)
 
 def save_history2txt(seed_history, out_file='.txt'):
 	"""
@@ -310,7 +310,8 @@ def run_model(args):
 		# print true centroids
 		for split in SPLITS:
 			true_c = raw_true_centroids[split]
-			print(f'{split}_true_centroids:\n{true_c}')
+			print(f'{split}_true_centroids:')
+			print(true_c)
 
 	# if algorithm_name == 'FEMNIST':
 	# 	save_image2disk((raw_x, raw_y), out_dir_i, params)
@@ -319,9 +320,10 @@ def run_model(args):
 	raw_x, raw_y, raw_true_centroids, global_stdscaler = normalize(raw_x, raw_y, raw_true_centroids, SPLITS, args)
 	args['global_stdscaler'] = global_stdscaler
 	history['raw_true_centroids'] = raw_true_centroids
-	print(f'after normalization, true_centroids: {raw_true_centroids} when normalize_method = {NORMALIZE_METHOD}')
+	print(f'after normalization, true_centroids:\n{raw_true_centroids} \nwhen normalize_method = {NORMALIZE_METHOD}')
 	# history = {'x': raw_x, 'y': raw_y, 'results': []}
 	SEEDS = [10 * v ** 2 for v in range(1, N_REPEATS + 1, 1)]
+	# SEEDS = [160]
 	history['SEEDS'] = SEEDS
 
 	from fkm.cluster import centralized_kmeans, federated_server_init_first, federated_client_init_first, \

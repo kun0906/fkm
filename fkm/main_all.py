@@ -129,6 +129,96 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 				datasets.append(
 					{'name': dataset_name, 'detail': data_detail, 'n_clusters': n_clusters, 'n_clients': n_clients})
 
+		elif dataset_name == 'MNIST':
+			data_details_lst = []
+			n_clients = 10
+			n_clusters = 10
+			tmp_list = []
+			for n in [50, 100, 500, 1000, 3000, 5000]:
+				p1 = f'n_{n}:ratio_0.00:diff_sigma_n'
+				tmp_list.append((p1, n_clusters, n_clients))
+			data_details_lst += tmp_list
+
+			for data_detail, n_clusters, n_clients in data_details_lst:
+				datasets.append(
+					{'name': dataset_name, 'detail': data_detail, 'n_clusters': n_clusters, 'n_clients': n_clients})
+
+		elif dataset_name == 'GASSENSOR':
+			data_details_lst = []
+			n_clients = 6
+			n_clusters = 6
+			tmp_list = []
+			for n in [50, 100, 500, 800, 1000, 1500]:
+				# there are 20 clients and each client has n users' data.
+				p1 = f'n_{n}:ratio_0.00:diff_sigma_n'
+				tmp_list.append((p1, n_clusters, n_clients))
+			data_details_lst += tmp_list
+
+			for data_detail, n_clusters, n_clients in data_details_lst:
+				datasets.append(
+					{'name': dataset_name, 'detail': data_detail, 'n_clusters': n_clusters, 'n_clients': n_clients})
+
+		elif dataset_name == 'CHARFONT':
+			data_details_lst = []
+			n_clients = 17
+			n_clusters = 17
+			tmp_list = []
+			for n in [50, 100, 500, 800, 1000, 1500, 3000]:
+				# there are 20 clients and each client has n users' data.
+				p1 = f'n_{n}:ratio_0.00:diff_sigma_n'
+				tmp_list.append((p1, n_clusters, n_clients))
+			data_details_lst += tmp_list
+
+			for data_detail, n_clusters, n_clients in data_details_lst:
+				datasets.append(
+					{'name': dataset_name, 'detail': data_detail, 'n_clusters': n_clusters, 'n_clients': n_clients})
+
+		elif dataset_name == 'DRYBEAN':
+			data_details_lst = []
+			n_clients = 6
+			n_clusters = 6
+			tmp_list = []
+			for n in [50, 100, 500, 800, 1000]:
+				# there are 20 clients and each client has n users' data.
+				p1 = f'n_{n}:ratio_0.00:diff_sigma_n'
+				tmp_list.append((p1, n_clusters, n_clients))
+			data_details_lst += tmp_list
+
+			for data_detail, n_clusters, n_clients in data_details_lst:
+				datasets.append(
+					{'name': dataset_name, 'detail': data_detail, 'n_clusters': n_clusters, 'n_clients': n_clients})
+
+		elif dataset_name == 'BITCOIN':
+			data_details_lst = []
+			n_clients = 4
+			n_clusters = 4
+			tmp_list = []
+			for n in [50, 500, 1000, 2000, 3000, 5000]:
+				# there are 20 clients and each client has n users' data.
+				p1 = f'n_{n}:ratio_0.00:diff_sigma_n'
+				tmp_list.append((p1, n_clusters, n_clients))
+			data_details_lst += tmp_list
+
+			for data_detail, n_clusters, n_clients in data_details_lst:
+				datasets.append(
+					{'name': dataset_name, 'detail': data_detail, 'n_clusters': n_clusters, 'n_clients': n_clients})
+
+		elif dataset_name == 'SELFBACK':
+			data_details_lst = []
+			n_clients = 9
+			n_clusters = 9
+			tmp_list = []
+			for n in [50, 100, 500, 800, 1000, 1500, 2000]:
+				# there are 20 clients and each client has n users' data.
+				p1 = f'n_{n}:ratio_0.00:diff_sigma_n'
+				tmp_list.append((p1, n_clusters, n_clients))
+			data_details_lst += tmp_list
+
+			for data_detail, n_clusters, n_clients in data_details_lst:
+				datasets.append(
+					{'name': dataset_name, 'detail': data_detail, 'n_clusters': n_clusters, 'n_clients': n_clients})
+
+
 		elif dataset_name == 'NBAIOT':
 			# for data_detail, n_clusters, n_clients in [ # ('nbaiot_user_percent', 2, 2),
 			#                                            # ('nbaiot_user_percent_client11', 2, 11),
@@ -137,43 +227,43 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 			# 	datasets.append(
 			# 		{'name': dataset_name, 'detail': data_detail, 'n_clusters': n_clusters, 'n_clients': n_clients})
 			data_details_lst = []
-			tmp_list = []
-			ratios = [ratio for ratio in [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.4999]]
-			N = 5000
-			n_clusters = 2
-			n_clients = 3
-			for ratio in ratios:
-				for n1 in [N]:
-					for n2 in [2500]:
-						for n3 in [2500]:
-							p1 = f'n1_{n1}+n2_{n2}+n3_{n3}:ratio_{ratio:.2f}:diff_sigma_n'
-							tmp_list.append((p1, n_clusters, n_clients))
-			data_details_lst += tmp_list
+			# tmp_list = []
+			# ratios = [ratio for ratio in [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.4999]]
+			# N = 5000
+			# n_clusters = 2
+			# n_clients = 3
+			# for ratio in ratios:
+			# 	for n1 in [N]:
+			# 		for n2 in [2500]:
+			# 			for n3 in [2500]:
+			# 				p1 = f'n1_{n1}+n2_{n2}+n3_{n3}:ratio_{ratio:.2f}:diff_sigma_n'
+			# 				tmp_list.append((p1, n_clusters, n_clients))
+			# data_details_lst += tmp_list
 
-			tmp_list = []
-			ratios = [ratio for ratio in [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.4999]]
-			N = 5000
-			n_clusters = 3
-			n_clients = 3
-			for ratio in ratios:
-				for n1 in [N]:
-					for n2 in [2500]:
-						for n3 in [2500]:
-							p1 = f'n1_{n1}+n2_{n2}+n3_{n3}:ratio_{ratio:.2f}:diff_sigma_n'
-							tmp_list.append((p1, n_clusters, n_clients))
-			data_details_lst += tmp_list
+			# tmp_list = []
+			# ratios = [ratio for ratio in [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.4999]]
+			# N = 5000
+			# n_clusters = 3
+			# n_clients = 3
+			# for ratio in ratios:
+			# 	for n1 in [N]:
+			# 		for n2 in [2500]:
+			# 			for n3 in [2500]:
+			# 				p1 = f'n1_{n1}+n2_{n2}+n3_{n3}:ratio_{ratio:.2f}:diff_sigma_n'
+			# 				tmp_list.append((p1, n_clusters, n_clients))
+			# data_details_lst += tmp_list
 
-			tmp_list = []
-			ratios = [ratio for ratio in [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.4999]]
-			N = 5000
-			n_clusters = 2
-			n_clients = 2
-			for ratio in ratios:
-				for n1 in [N]:
-					for n2 in [N]:
-						p1 = f'n1_{n1}+n2_{n2}:ratio_{ratio:.2f}:C_2_diff_sigma_n'
-						tmp_list.append((p1, n_clusters, n_clients))
-			data_details_lst += tmp_list
+			# tmp_list = []
+			# ratios = [ratio for ratio in [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.4999]]
+			# N = 5000
+			# n_clusters = 2
+			# n_clients = 2
+			# for ratio in ratios:
+			# 	for n1 in [N]:
+			# 		for n2 in [N]:
+			# 			p1 = f'n1_{n1}+n2_{n2}:ratio_{ratio:.2f}:C_2_diff_sigma_n'
+			# 			tmp_list.append((p1, n_clusters, n_clients))
+			# data_details_lst += tmp_list
 
 			tmp_list = []
 			N1S = [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]
@@ -239,7 +329,7 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 				N1=N2=N3 = 10,000
 				P = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.4999]
 			"""
-			# # n1_100-sigma1_0.1_0.1+n2_5000-sigma2_0.1_0.1+n3_10000-sigma3_1.0_0.1:ratio_0.1:diff_sigma_n
+			# n1_100-sigma1_0.1_0.1+n2_5000-sigma2_0.1_0.1+n3_10000-sigma3_1.0_0.1:ratio_0.1:diff_sigma_n
 			# # same sigma
 			# tmp_list = []
 			# N = 5000    # total cases: 8*7
@@ -253,7 +343,7 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 			# 						for sigma3 in ["0.3_0.3"]:  # sigma  = [[1, 0], [0, 0.1]]
 			# 							p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
 			# 							tmp_list.append((p1, n_clusters, n_clients))
-			#
+			# #
 			# data_details_lst += tmp_list
 			#
 			# tmp_list = []
@@ -272,12 +362,12 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 
 			tmp_list = []
 			N = 5000  # total cases: 9*7
-			for ratio in [0.0]:  # ratios:
+			for ratio in ratios:  # ratios:
 				for n1 in [N]:
 					for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
 						for n2 in [N]:
 							for sigma2 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
-								for n3 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+								for n3 in [N]:
 									for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
 										p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
 										tmp_list.append((p1, n_clusters, n_clients))
@@ -287,16 +377,44 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 			tmp_list = []
 			N = 5000  # total cases: 9*7
 			for ratio in [0.0]:  # ratios:
-				for n1 in [N]:
-					for sigma1 in ["0.3_0.3"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+				for n1 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+					for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
 						for n2 in [N]:
-							for sigma2 in ["0.3_0.3"]:  # sigma  = [[0.1, 0], [0, 0.1]]
-								for n3 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+							for sigma2 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+								for n3 in [N]:
 									for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
 										p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
 										tmp_list.append((p1, n_clusters, n_clients))
 
 			data_details_lst += tmp_list
+
+			# tmp_list = []
+			# N = 5000  # total cases: 9*7
+			# for ratio in [0.0]:  # ratios:
+			# 	for n1 in [N]:
+			# 		for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+			# 			for n2 in [N]:
+			# 				for sigma2 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+			# 					for n3 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+			# 						for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
+			# 							p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
+			# 							tmp_list.append((p1, n_clusters, n_clients))
+			#
+			# data_details_lst += tmp_list
+			#
+			# tmp_list = []
+			# N = 5000  # total cases: 9*7
+			# for ratio in [0.0]:  # ratios:
+			# 	for n1 in [N]:
+			# 		for sigma1 in ["0.3_0.3"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+			# 			for n2 in [N]:
+			# 				for sigma2 in ["0.3_0.3"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+			# 					for n3 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+			# 						for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
+			# 							p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
+			# 							tmp_list.append((p1, n_clusters, n_clients))
+			#
+			# data_details_lst += tmp_list
 
 
 			# # n1_100-sigma1_0.1+n2_5000-sigma2_0.2+n3_10000-sigma3_0.3:ratio_0.1:diff_sigma_n
@@ -365,6 +483,21 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 				"""
 				# # n1_100-sigma1_0.1_0.1+n2_5000-sigma2_0.1_0.1+n3_10000-sigma3_1.0_0.1:ratio_0.1:diff_sigma_n
 				# # same sigma
+
+				tmp_list = []
+				N = 5000
+				for ratio in [0.0]:
+					for n1 in [N]:
+						# for n1 in [500, 2000, 3000, 5000, 8000]:
+						for sigma1 in ["0.1_0.1"]:
+							for n2 in [N]:
+								for sigma2 in ["0.1_0.1"]:
+									for n3 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+										for sigma3 in ["1.0_0.1"]:
+											p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
+											tmp_list.append((p1, n_clusters, n_clients))
+				data_details_lst += tmp_list
+
 				tmp_list = []
 				N = 5000
 				for ratio in ratios:
@@ -525,8 +658,9 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 	tot_cnt = 0
 	# ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
 	# dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS'] # ['NBAIOT'] # '3GAUSSIANS', '10GAUSSIANS', 'NBAIOT',  'FEMNIST', 'SENT140'
-	dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', ]  #
-	dataset_names = [ '10GAUSSIANS',]  #
+	dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'DRYBEAN','GASSENSOR','SELFBACK', 'MNIST']  #
+	dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT','DRYBEAN', 'GASSENSOR','SELFBACK']  #
+	dataset_names = ['FEMNIST']
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
@@ -549,8 +683,13 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 		N_CLIENTS = args1['N_CLIENTS']
 		N_REPEATS = args1['N_REPEATS']
 		N_CLUSTERS = args1['N_CLUSTERS']
-		args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
-		                                                 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+		NORMALIZE_METHOD = args1['NORMALIZE_METHOD']
+		IS_PCA = args1['IS_PCA']
+		if args1['DATASET']['name']  == 'MNIST' and IS_PCA:
+			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}',
+			                                                 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+		else:
+			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
 		dataset_detail = args1['DATASET']['detail']
 
 		### generate dataset first to save time.
@@ -600,5 +739,5 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 
 
 if __name__ == '__main__':
-	# main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5)
+	main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5)
 	main(N_REPEATS=5, OVERWRITE=True, IS_DEBUG=False, VERBOSE=1)

@@ -6,10 +6,16 @@ https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_plusplus.html#
 import os
 import pickle
 
+from fkm.datasets.bitcoin import bitcoin_diff_sigma_n
+from fkm.datasets.charfont import charfont_diff_sigma_n
+from fkm.datasets.drybean import drybean_diff_sigma_n
 from fkm.datasets.femnist import femnist_multiusers_per_client, femnist_diff_sigma_n
+from fkm.datasets.gassensor import gassensor_diff_sigma_n
 from fkm.datasets.gaussian10 import gaussian10_diff_sigma_n
+from fkm.datasets.mnist import mnist_diff_sigma_n
 from fkm.datasets.nbaiot import nbaiot_user_percent, nbaiot_user_percent_client11, nbaiot_diff_sigma_n, \
 	nbaiot_C_2_diff_sigma_n
+from fkm.datasets.selfback import selfback_diff_sigma_n
 from fkm.datasets.sent140 import sent140_user_percent, sent140_diff_sigma_n
 from fkm.datasets.gaussian3 import gaussian3_diff_sigma_n
 from fkm.utils.utils_func import timer
@@ -54,6 +60,42 @@ def generate_dataset(args):
 			data = femnist_multiusers_per_client(args, random_state=SEED)
 		elif 'diff_sigma_n' in dataset_detail:
 			data = femnist_diff_sigma_n(args, random_state=SEED)
+		else:
+			msg = f'{dataset_name}, {dataset_detail}'
+			raise NotImplementedError(msg)
+	elif dataset_name == 'MNIST':
+		if 'diff_sigma_n' in dataset_detail:
+			data = mnist_diff_sigma_n(args, random_state=SEED)
+		else:
+			msg = f'{dataset_name}, {dataset_detail}'
+			raise NotImplementedError(msg)
+	elif dataset_name == 'GASSENSOR':
+		if 'diff_sigma_n' in dataset_detail:
+			data = gassensor_diff_sigma_n(args, random_state=SEED)
+		else:
+			msg = f'{dataset_name}, {dataset_detail}'
+			raise NotImplementedError(msg)
+	elif dataset_name == 'CHARFONT':
+		if 'diff_sigma_n' in dataset_detail:
+			data = charfont_diff_sigma_n(args, random_state=SEED)
+		else:
+			msg = f'{dataset_name}, {dataset_detail}'
+			raise NotImplementedError(msg)
+	elif dataset_name == 'DRYBEAN':
+		if 'diff_sigma_n' in dataset_detail:
+			data = drybean_diff_sigma_n(args, random_state=SEED)
+		else:
+			msg = f'{dataset_name}, {dataset_detail}'
+			raise NotImplementedError(msg)
+	elif dataset_name == 'BITCOIN':
+		if 'diff_sigma_n' in dataset_detail:
+			data = bitcoin_diff_sigma_n(args, random_state=SEED)
+		else:
+			msg = f'{dataset_name}, {dataset_detail}'
+			raise NotImplementedError(msg)
+	elif dataset_name == 'SELFBACK':
+		if 'diff_sigma_n' in dataset_detail:
+			data = selfback_diff_sigma_n(args, random_state=SEED)
 		else:
 			msg = f'{dataset_name}, {dataset_detail}'
 			raise NotImplementedError(msg)

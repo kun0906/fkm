@@ -243,12 +243,14 @@ def nbaiot_diff_sigma_n(args, random_state=42):
         # client 1
         f = os.path.join(in_dir, 'benign_traffic.csv')
         X1 = pd.read_csv(f).values
+        print('normal: ', X1.shape)
         X1 = sklearn.utils.resample(X1, replace=False, n_samples=n1, random_state=random_state)
         y1 = np.asarray([0] * X1.shape[0])
 
         # client 2
         f = os.path.join(in_dir, os.path.join('gafgyt_attacks', "tcp.csv"))
         X2 = pd.read_csv(f).values
+        print('abnormal:', X2.shape)
         X2 = sklearn.utils.resample(X2, replace=False, n_samples=n2, random_state=random_state)
         y2 = np.asarray([1] * X2.shape[0])
 
@@ -596,3 +598,17 @@ def nbaiot_C_2_diff_sigma_n(args, random_state=42):
               'test': clients_test_y}
 
     return x, labels
+
+def stats( in_dir = 'datasets/NBAIOT/Danmini_Doorbell'):
+    csvs = ['benign_traffic.csv'] + \
+           [os.path.join('gafgyt_attacks', f) for f in sorted(os.listdir(os.path.join(in_dir, 'gafgyt_attacks')))] + \
+           [os.path.join('mirai_attacks', f) for f in sorted(os.listdir(os.path.join(in_dir, 'mirai_attacks')))]
+    for csv in csvs:
+        f = os.path.join(in_dir, csv)
+        df = pd.read_csv(f)
+        print(df.shape, f)
+
+if __name__ == '__main__':
+    stats()
+	# nbaiot_diff_sigma_n({'N_CLIENTS': 0, 'N_CLUSTERS': 2, 'IS_PCA':True, 'DATASET': {'detail': 'n1_100+n2_100+n3_100:ratio_0.00:diff_sigma_n'}})
+

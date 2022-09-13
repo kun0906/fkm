@@ -21,9 +21,8 @@ from fkm.main_all import get_datasets_config_lst, get_algorithms_config_lst
 from fkm.utils.utils_func import load
 
 
-def parser_history(args):
-
-	OUT_DIR =  args['OUT_DIR']
+def _parser_history(args):
+	OUT_DIR = args['OUT_DIR']
 	# read scores from out.txt
 	# server_init_method = args['ALGORITHM']['server_init_method']
 	# client_init_method = args['ALGORITHM']['client_init_method']
@@ -56,21 +55,22 @@ def parser_history(args):
 				for seed in SEEDS:
 					# if history[seed]['scores'][split]['n_clusters'] != history[seed]['scores'][split]['n_clusters_pred']:
 					# 	continue
-					initial_centroids+=[[ f'{v:.5f}' for v in vs ] for vs in history[seed]['initial_centroids']]
-					final_centroids += [[ f'{v:.5f}' for v in vs ] for vs in history[seed]['final_centroids']]
-					final_centroids_lst += ['(' + ', '.join(f'{v:.5f}' for v in vs) + ')' for vs in history[seed]['final_centroids']]
+					initial_centroids += [[f'{v:.5f}' for v in vs] for vs in history[seed]['initial_centroids']]
+					final_centroids += [[f'{v:.5f}' for v in vs] for vs in history[seed]['final_centroids']]
+					final_centroids_lst += ['(' + ', '.join(f'{v:.5f}' for v in vs) + ')' for vs in
+					                        history[seed]['final_centroids']]
 					training_iterations.append(history[seed]['training_iterations'])
 					durations.append(history[seed]['duration'])
 				results_avg[split] = {'metric_names': metric_names,
-									'Iterations': (np.mean(training_iterations), np.std(training_iterations)),
+				                      'Iterations': (np.mean(training_iterations), np.std(training_iterations)),
 				                      'durations': (np.mean(durations), np.std(durations)),
-				                        'initial_centroids': initial_centroids,
-				                        'final_centroids': final_centroids,
-				                        'final_centroids_lst': final_centroids_lst}
-				# s += f'\titerations: {np.mean(training_iterations):.2f} +/- '\
-				#      f'{np.std(training_iterations):.2f}\n'
-				# s += f'\tdurations: {np.mean(durations):.2f} +/- ' \
-				#      f'{np.std(durations):.2f}\n'
+				                      'initial_centroids': initial_centroids,
+				                      'final_centroids': final_centroids,
+				                      'final_centroids_lst': final_centroids_lst}
+			# s += f'\titerations: {np.mean(training_iterations):.2f} +/- '\
+			#      f'{np.std(training_iterations):.2f}\n'
+			# s += f'\tdurations: {np.mean(durations):.2f} +/- ' \
+			#      f'{np.std(durations):.2f}\n'
 			else:
 				results_avg[split] = {'Iterations': ('', '')}
 			for metric_name in metric_names:
@@ -95,19 +95,58 @@ def parser_history(args):
 					score_mean = np.nan
 					score_std = np.nan
 				results_avg[split][metric_name] = (score_mean, score_std)
-				# s += f'\t{metric_name}: {score_mean:.2f} +/- {score_std:.2f}\n'
+		# s += f'\t{metric_name}: {score_mean:.2f} +/- {score_std:.2f}\n'
 
-			# s += f'initial_centroids:\n{initial_centroids}\n'
-			# s += f'final_centroids:\n{final_centroids}\n'
-			# # final centroids distribution
-			# s += 'final centroids distribution: \n'
-			# ss_ = sorted(collections.Counter(final_centroids_lst).items(), key=lambda kv: kv[1], reverse=True)
-			# tot_centroids = len(final_centroids_lst)
-			# s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:.2f}% - ({cnt_}/{tot_centroids})' for
-			#                  cen_, cnt_ in ss_)
+	# s += f'initial_centroids:\n{initial_centroids}\n'
+	# s += f'final_centroids:\n{final_centroids}\n'
+	# # final centroids distribution
+	# s += 'final centroids distribution: \n'
+	# ss_ = sorted(collections.Counter(final_centroids_lst).items(), key=lambda kv: kv[1], reverse=True)
+	# tot_centroids = len(final_centroids_lst)
+	# s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:.2f}% - ({cnt_}/{tot_centroids})' for
+	#                  cen_, cnt_ in ss_)
 	except Exception as e:
 		warnings.warn(f'Parser Error: {e}')
 		raise FileNotFoundError
+
+	return results_avg
+
+
+def parser_history(args_lst):
+	results_avg = {}
+	for i_args, args in enumerate(args_lst):
+		try:
+			results_avg_ = _parser_history(args)
+
+			if i_args == 0:
+				for split, vs in results_avg_.items():
+					if split not in results_avg:
+						results_avg[split] = {}
+					for metric_, v_ in vs.items():
+						if metric_ == 'metric_names':
+							results_avg[split][metric_] = v_
+						elif metric_ not in ['initial_centroids', 'final_centroids', 'final_centroids_lst', 'n_clusters',
+						               'n_clusters_pred', 'labels_true', 'labels_pred']:
+							mean_, std_ = results_avg_[split][metric_] #  We use the fixed seed for each model, so here only one score (i.e., mean is the real score, std is 0)
+							results_avg[split][metric_] = [mean_]
+						else:
+							results_avg[split][metric_] = copy.deepcopy(v_)
+			else:
+				for split, vs in results_avg_.items():
+					for metric_, v_ in vs.items():
+						results_avg[split][metric_].append(results_avg_[split][metric_])
+		except Exception as e:
+			traceback.print_exc()
+
+	for split, vs in results_avg.items():
+		for metric_, v_ in vs.items():
+			if metric_ not in ['metric_names', 'initial_centroids', 'final_centroids', 'final_centroids_lst', 'n_clusters',
+			                   'n_clusters_pred', 'labels_true', 'labels_pred']:
+				try:
+					tmp = results_avg[split][metric_]
+					results_avg[split][metric_] = (np.mean(tmp), np.std(tmp))
+				except Exception as e:
+					results_avg[split][metric_] = (e, )
 
 	return results_avg
 
@@ -504,6 +543,7 @@ METRIC2ABBRV = {'Iterations': 'Iterations',
                 'durations': 'Durations',
                 'davies_bouldin': 'DB',
                 'silhouette': 'Silhouette',
+				'sil_weighted': 'Sil_weighted',
                 'ch': 'CH',
                 'euclidean': 'Euclidean',
                 'n_clusters': 'N_clusters',
@@ -587,9 +627,8 @@ def main2():
 
 	tot_cnt = 0
 	sheet_names = set()
-	dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS',
-	                 'CHARFONT', 'GASSENSOR','DRYBEAN', 'SELFBACK','MNIST', 'BITCOIN']
-	# dataset_names = []
+	dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
+	dataset_names = ['NBAIOT']
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
@@ -612,15 +651,9 @@ def main2():
 		N_CLUSTERS = dataset['n_clusters']
 		args1['N_CLIENTS'] = dataset['n_clients']
 		args1['N_CLUSTERS'] = dataset['n_clusters']
-		NORMALIZE_METHOD = args1['NORMALIZE_METHOD']
-		IS_PCA = args1['IS_PCA']
-		if args1['DATASET']['name'] == 'MNIST' and IS_PCA:
-			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}',
-				 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
-		else:
-			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+		args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'],
+		                                                 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
 		dataset_detail = args1['DATASET']['detail']
-
 		args1['ALGORITHM']['n_clusters'] = dataset['n_clusters']
 		algorithms = get_algorithms_config_lst(py_names, dataset['n_clusters'])
 		for idx_alg, algorithm in enumerate(algorithms):
@@ -666,21 +699,18 @@ def main2():
 
 				# get csv file
 				csv_file = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '.csv')
-				csv_file_detail = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '-detail.csv')
-				csv_file_topk = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '-topk.csv')
-				csv_file_topk_detail = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '-topk-detail.csv')
+				csv_file2 = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '-detail.csv')
 				try:
 					csv_f = open(csv_file, 'w')
-					csv_f_detail = open(csv_file_detail, 'w')
-					csv_f_topk = open(csv_file_topk, 'w')
-					csv_f_topk_detail = open(csv_file_topk_detail, 'w')
+					csv_f2 = open(csv_file2, 'w')
 				except Exception as e:
 					traceback.print_exc()
 					break
 			try:
 				results_avg = parser_history(args2)
 				save2xls(workbook, worksheet, idx_alg, args2, results_avg)
-
+				# # only save the top 2 results
+				# results_avg = parser_history_topk(args2)
 				save2csv(csv_f, idx_alg, args2, results_avg, metric_names=['ari', 'ami', 'fm', 'vm',
 				                                                           'Iterations', 'durations', 'davies_bouldin',
 				                                                           'silhouette', 'ch', 'euclidean',
@@ -689,44 +719,159 @@ def main2():
 				                                                           ])
 				# save results detail
 				results_detail = parser_history2(args2)
-				save2csv2(csv_f_detail, idx_alg, args2, results_detail, metric_names=['ari', 'ami', 'fm', 'vm',
-				                                                                      'Iterations', 'durations',
-				                                                                      'davies_bouldin',
-				                                                                      'silhouette', 'ch', 'euclidean',
-				                                                                      'n_clusters', 'n_clusters_pred',
-				                                                                      'labels_pred', 'labels_true'
-				                                                                      ])
-
-				# # only save the top 2 results
-				results_topk = parser_history_topk(args2)
-				save2csv(csv_f_topk, idx_alg, args2, results_topk, metric_names=['ari', 'ami', 'fm', 'vm',
+				save2csv2(csv_f2, idx_alg, args2, results_detail, metric_names=['ari', 'ami', 'fm', 'vm',
 				                                                           'Iterations', 'durations', 'davies_bouldin',
 				                                                           'silhouette', 'ch', 'euclidean',
 				                                                           'n_clusters', 'n_clusters_pred',
-				                                                           'labels_pred', 'labels_true'
+				                                                            'labels_pred', 'labels_true'
 				                                                           ])
-
-				# # save results topk detail: To Do
-				# results_topk_detail = parser_history2(args2)
-				# save2csv2(csv_f_topk_detail, idx_alg, args2, results_topk_detail, metric_names=['ari', 'ami', 'fm', 'vm',
-				#                                                                       'Iterations', 'durations',
-				#                                                                       'davies_bouldin',
-				#                                                                       'silhouette', 'ch', 'euclidean',
-				#                                                                       'n_clusters', 'n_clusters_pred',
-				#                                                                       'labels_pred', 'labels_true'
-				#                                                                       ])
-
 			except Exception as e:
 				traceback.print_exc()
 			tot_cnt += 1
 		csv_f.close()
-		csv_f_detail.close()
-		csv_f_topk.close()
-		csv_f_topk_detail.close()
+		csv_f2.close()
 		workbook.close()
 	# break
 	print(f'*** Total cases: {tot_cnt}')
 
 
+
+def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
+	# get default config.yaml
+	config_file = 'config.yaml'
+	args = config.load(config_file)
+	OUT_DIR = args['OUT_DIR']
+	SEPERTOR = args['SEPERTOR']
+	args['N_REPEATS'] = N_REPEATS
+	args['OVERWRITE'] = OVERWRITE
+	args['VERBOSE'] = VERBOSE
+
+	tot_cnt = 0
+	# ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
+	# dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS'] # ['NBAIOT'] # '3GAUSSIANS', '10GAUSSIANS', 'NBAIOT',  'FEMNIST', 'SENT140'
+	dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK','GASSENSOR','SELFBACK', 'MNIST']  #
+	dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT','DRYBEAN', 'GASSENSOR','SELFBACK']  #
+	dataset_names = ['NBAIOT'] #
+	py_names = [
+		'centralized_kmeans',
+		# 'federated_server_init_first',  # server first: min-max per each dimension
+		# 'federated_client_init_first',  # client initialization first : server average
+		# 'federated_greedy_kmeans',  # client initialization first: greedy: server average
+		# # 'Our_greedy_center',
+		# 'Our_greedy_2K',
+		# 'Our_greedy_K_K',
+		# 'Our_greedy_concat_Ks',
+		# 'Our_weighted_kmeans_initialization',
+	]
+	sheet_names = set()
+	datasets = get_datasets_config_lst(dataset_names)
+	for dataset in datasets:
+		algorithms = get_algorithms_config_lst(py_names, dataset['n_clusters'])
+		for idx_alg, algorithm in enumerate(algorithms):
+			print(f'*** {tot_cnt}th experiment ***:', dataset['name'], algorithm['py_name'])
+			Args_lst = []
+			for i_repeat in range(N_REPEATS):
+				seed_data = i_repeat * 10   # data seed
+				print('\n***', dataset['name'], i_repeat, seed_data)
+				args1 = copy.deepcopy(args)
+				SEED = args1['SEED'] # model seed
+				args1['SEED_DATA'] = seed_data
+				args1['DATASET']['name'] = dataset['name']
+				args1['DATASET']['detail'] = dataset['detail']
+				args1['N_CLIENTS'] = dataset['n_clients']
+				args1['N_CLUSTERS'] = dataset['n_clusters']
+				N_CLIENTS = args1['N_CLIENTS']
+				N_REPEATS = args1['N_REPEATS']
+				N_CLUSTERS = args1['N_CLUSTERS']
+				NORMALIZE_METHOD = args1['NORMALIZE_METHOD']
+				IS_PCA = args1['IS_PCA']
+				# if args1['DATASET']['name']  == 'MNIST' and IS_PCA:
+				# 	args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}',
+				# 	                                                 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+				# else:
+				args1['DATASET']['detail'] = os.path.join(f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}', f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}']), f'SEED_DATA_{seed_data}')
+				dataset_detail = args1['DATASET']['detail']
+
+				args2 = copy.deepcopy(args1)
+				args2['IS_FEDERATED'] = algorithm['IS_FEDERATED']
+				args2['ALGORITHM']['py_name'] = algorithm['py_name']
+				# initial_method = args2['ALGORITHM']['initial_method']
+				args2['ALGORITHM']['server_init_method'] = algorithm['server_init_method']
+				server_init_method = args2['ALGORITHM']['server_init_method']
+				args2['ALGORITHM']['client_init_method'] = algorithm['client_init_method']
+				client_init_method = args2['ALGORITHM']['client_init_method']
+				# args2['ALGORITHM']['name'] = algorithm['py_name'] + '_' + f'{server_init_method}|{client_init_method}'
+				TOLERANCE = args2['TOLERANCE']
+				NORMALIZE_METHOD = args2['NORMALIZE_METHOD']
+				args2['ALGORITHM']['detail'] = f'{SEPERTOR}'.join([f'R_{N_REPEATS}',
+				                                                   f'{server_init_method}|{client_init_method}',
+				                                                   f'{TOLERANCE}', f'{NORMALIZE_METHOD}'])
+				args2['OUT_DIR'] = os.path.join(OUT_DIR, args2['DATASET']['name'], f'{dataset_detail}',
+				                                args2['ALGORITHM']['py_name'], args2['ALGORITHM']['detail'])
+
+				Args_lst.append(copy.deepcopy(args2))
+
+				tot_cnt += 1
+
+			if idx_alg == 0:
+
+				xlsx_file = os.path.join(OUT_DIR, 'xlsx', args2['DATASET']['name'], f'{os.path.dirname(dataset_detail)}',
+				                         args2['ALGORITHM']['detail'] + '.xlsx')
+
+				tmp_dir = os.path.dirname(xlsx_file)
+				if not os.path.exists(tmp_dir):
+					os.makedirs(tmp_dir)
+				workbook = xlsxwriter.Workbook(xlsx_file)
+				if VERBOSE >= 1: print(xlsx_file)
+				sheet_name = dataset_detail[:25].replace(':', ' ')
+				if sheet_name in sheet_names:
+					sheet_name = sheet_name + f'{len(sheet_names)}'
+				sheet_names.add(sheet_name)
+				if VERBOSE >= 1: print(f'xlsx_sheet_name: {sheet_name}')
+				worksheet = workbook.add_worksheet(name=sheet_name)
+
+				# get csv file
+				csv_file = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '.csv')
+				csv_file2 = os.path.join(os.path.dirname(xlsx_file), args2['ALGORITHM']['detail'] + '-detail.csv')
+				try:
+					csv_f = open(csv_file, 'w')
+					csv_f2 = open(csv_file2, 'w')
+				except Exception as e:
+					traceback.print_exc()
+					break
+			try:
+				results_avg = parser_history(Args_lst)
+				save2xls(workbook, worksheet, idx_alg, args2, results_avg)
+				# # only save the top 2 results
+				# results_avg = parser_history_topk(args2)
+				save2csv(csv_f, idx_alg, args2, results_avg, metric_names=['ari', 'ami', 'fm', 'vm',
+				                                                           'Iterations', 'durations', 'davies_bouldin',
+				                                                           'silhouette', 'sil_weighted',
+				                                                           'ch', 'euclidean',
+				                                                           'n_clusters', 'n_clusters_pred',
+				                                                           'labels_pred', 'labels_true'
+				                                                           ])
+				# save results detail
+				results_detail = parser_history2(args2)
+				save2csv2(csv_f2, idx_alg, args2, results_detail, metric_names=['ari', 'ami', 'fm', 'vm',
+				                                                           'Iterations', 'durations', 'davies_bouldin',
+				                                                           'silhouette',  'sil_weighted',
+				                                                                'ch', 'euclidean',
+				                                                           'n_clusters', 'n_clusters_pred',
+				                                                            'labels_pred', 'labels_true'
+				                                                           ])
+			except Exception as e:
+				traceback.print_exc()
+			tot_cnt += 1
+
+		csv_f.close()
+		csv_f2.close()
+		workbook.close()
+		print(csv_file)
+
+	print(f'*** Total cases: {tot_cnt}')
+
+
 if __name__ == '__main__':
-	main2()
+	# main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5)
+	main(N_REPEATS=100, OVERWRITE=True, IS_DEBUG=False, VERBOSE=2)

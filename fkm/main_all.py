@@ -11,9 +11,23 @@
 '
 #ssh ky8517@tigergpu.princeton.edu
 srun --nodes=1  --mem=128G --ntasks-per-node=1 --time=20:00:00 --pty bash -i
+srun --nodes=1  --mem=128G --ntasks-per-node=1 --time=20:00:00 --pty bash -i
 #srun --nodes=1 --gres=gpu:1 --mem=128G --ntasks-per-node=1 --time=20:00:00 --pty bash -i
 cd /scratch/gpfs/ky8517/fkm/fkm
 module load anaconda3/2021.11
+
+export PYTHONPATH="${PYTHONPATH}:..\"
+
+# single quote (just treat the content inside it as a string) vs double quote in bash
+# $ echo "$(echo "upg")"
+# upg
+# $ echo '$(echo "upg")'
+# $(echo "upg")
+#
+As as result, if the file path contains \, &, $, please use single quote
+
+linux: Difference between terms: "option", "argument", and "parameter"?
+https://stackoverflow.com/questions/36495669/difference-between-terms-option-argument-and-parameter
 
 """
 # Email: kun.bj@outllok.com
@@ -26,7 +40,84 @@ from fkm import config, main_single
 from fkm.datasets.dataset import generate_dataset
 
 
-def gen_sh(args):
+# def gen_sh(args):
+# 	"""
+#
+# 	Parameters
+# 	----------
+# 	py_name
+# 	case
+#
+# 	Returns
+# 	-------
+#
+# 	"""
+#
+# 	# check_arguments()
+# 	dataset_name = args['DATASET']['name']
+# 	dataset_detail = args['DATASET']['detail']
+# 	# n_clients = args['N_CLIENTS']
+# 	algorithm_py_name = args['ALGORITHM']['py_name']
+# 	# algorithm_name = args['ALGORITHM']['name']
+# 	algorithm_detail = args['ALGORITHM']['detail']
+# 	# n_clusters = args['ALGORITHM']['n_clusters']
+# 	config_file = args['config_file']
+# 	OUT_DIR = args['OUT_DIR']
+#
+# 	job_name = f'{dataset_name}-{dataset_detail}-{algorithm_py_name}-{algorithm_detail}'
+# 	# tmp_dir = '~tmp'
+# 	# if not os.path.exists(tmp_dir):
+# 	# 	os.system(f'mkdir {tmp_dir}')
+# 	if '2GAUSSIANS' in dataset_name:
+# 		t = 24
+# 	elif 'FEMNIST' in dataset_name and 'greedy' in algorithm_py_name:
+# 		t = 48
+# 	else:
+# 		t = 48
+# 	content = fr"""#!/bin/bash
+# #SBATCH --job-name={OUT_DIR}         # create a short name for your job
+# #SBATCH --nodes=1                # node count
+# #SBATCH --ntasks=1               # total number of tasks across all nodes
+# #SBATCH --cpus-per-task=5        # cpu-cores per task (>1 if multi-threaded tasks)
+# #SBATCH --mem-per-cpu=4G         # memory per cpu-core (4G is default)
+# #SBATCH --time={t}:00:00          # total run time limit (HH:MM:SS)
+# ## SBATCH --output={OUT_DIR}/%j-{job_name}-out.txt
+# ## SBATCH --error={OUT_DIR}/%j-{job_name}-err.txt
+# #SBATCH --output={OUT_DIR}/out.txt
+# #SBATCH --error={OUT_DIR}/err.txt
+#
+# ### SBATCH --mail-type=begin        # send email when job begins
+# ### SBATCH --mail-type=end          # send email when job ends\
+# ### SBATCH --mail-user=kun.bj@cloud.com # not work \
+# ### SBATCH --mail-user=<YourNetID>@princeton.edu
+# #SBATCH --mail-user=ky8517@princeton.edu     # which will cause too much email notification.
+#
+# module purge
+# module load anaconda3/2021.11   # Python 3.9.7
+# pip3 install nltk
+#
+# cd /scratch/gpfs/ky8517/fkm/fkm
+# pwd
+# python3 -V
+#     """
+#
+# 	# content += '\n' + f"PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 {algorithm_py_name} --dataset '{dataset_name}' " \
+# 	#                   f"--data_details '{dataset_detail}' --algorithm '{algorithm_name}' --n_clusters '{n_clusters}' --n_clients '{n_clients}' \n"
+# 	content += '\n' + f"nohup PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 main_single.py --config_file '{config_file}' > {job_name}.txt &\n"
+#
+# 	# not work with '&' running in background > {job_name}.txt 2>&1 &
+# 	content += '\nwait\n'
+# 	content += '\necho \'done\''
+# 	# sh_file = f'{OUT_DIR}/{dataset_name}-{dataset_detail}-{algorithm_name}-{algorithm_detail}.sh'
+# 	sh_file = f'{OUT_DIR}/sbatch.sh'
+# 	with open(sh_file, 'w') as f:
+# 		f.write(content)
+# 	cmd = f"sbatch '{sh_file}'"
+# 	print(cmd)
+# 	os.system(cmd)
+
+
+def gen_all_sh(Args_lst):
 	"""
 
 	Parameters
@@ -38,26 +129,26 @@ def gen_sh(args):
 	-------
 
 	"""
-
+	args = Args_lst[0]
 	# check_arguments()
 	dataset_name = args['DATASET']['name']
-	dataset_detail = args['DATASET']['detail']
+	dataset_detail = os.path.dirname(args['DATASET']['detail'])
 	# n_clients = args['N_CLIENTS']
-	algorithm_py_name = args['ALGORITHM']['py_name']
-	# algorithm_name = args['ALGORITHM']['name']
-	algorithm_detail = args['ALGORITHM']['detail']
-	# n_clusters = args['ALGORITHM']['n_clusters']
-	config_file = args['config_file']
-	OUT_DIR = args['OUT_DIR']
+	# algorithm_py_name = args['ALGORITHM']['py_name']
+	# # algorithm_name = args['ALGORITHM']['name']
+	# algorithm_detail = args['ALGORITHM']['detail']
+	# # n_clusters = args['ALGORITHM']['n_clusters']
+	# config_file = args['config_file']
+	OUT_DIR = os.path.join(*args['OUT_DIR'].split('/')[:3])
 
-	job_name = f'{dataset_name}-{dataset_detail}-{algorithm_py_name}-{algorithm_detail}'
+	job_name = f'{dataset_name}-{dataset_detail}'
 	# tmp_dir = '~tmp'
 	# if not os.path.exists(tmp_dir):
 	# 	os.system(f'mkdir {tmp_dir}')
 	if '2GAUSSIANS' in dataset_name:
-		t = 24
-	elif 'FEMNIST' in dataset_name and 'greedy' in algorithm_py_name:
 		t = 48
+	# elif 'FEMNIST' in dataset_name and 'greedy' in algorithm_py_name:
+	# 	t = 48
 	else:
 		t = 48
 	content = fr"""#!/bin/bash
@@ -73,10 +164,10 @@ def gen_sh(args):
 #SBATCH --error={OUT_DIR}/err.txt
 
 ### SBATCH --mail-type=begin        # send email when job begins
-### SBATCH --mail-type=end          # send email when job ends\
 ### SBATCH --mail-user=kun.bj@cloud.com # not work \
-### SBATCH --mail-user=<YourNetID>@princeton.edu
-### SBATCH --mail-user=ky8517@princeton.edu     # which will cause too much email notification. 
+### SBATCH --mail-user=<YourNetID>@princeton.edu\
+#SBATCH --mail-type=end          # send email when job ends\
+#SBATCH --mail-user=ky8517@princeton.edu     # which will cause too much email notification. 
 
 module purge
 module load anaconda3/2021.11   # Python 3.9.7
@@ -85,13 +176,27 @@ pip3 install nltk
 cd /scratch/gpfs/ky8517/fkm/fkm 
 pwd
 python3 -V
-    """
 
-	# content += '\n' + f"PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 {algorithm_py_name} --dataset '{dataset_name}' " \
-	#                   f"--data_details '{dataset_detail}' --algorithm '{algorithm_name}' --n_clusters '{n_clusters}' --n_clients '{n_clients}' \n"
-	content += '\n' + f"PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 main_single.py --config_file '{config_file}'\n"
+"""
+	content += "\nexport PYTHONPATH=\"${PYTHONPATH}:..\" \n"
+	for args in Args_lst:
+		config_file_ = args['config_file']
+		out_dir_ = args['OUT_DIR']
+		# content += '\n' + f"PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 {algorithm_py_name} --dataset '{dataset_name}' " \
+		#                   f"--data_details '{dataset_detail}' --algorithm '{algorithm_name}' --n_clusters '{n_clusters}' --n_clients '{n_clients}' \n"
+		content +=  f"\nPYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 main_single.py --config_file '{config_file_}' > '{out_dir_}/a.txt'  2>&1 & \n"
 
-	# not work with '&' running in background > {job_name}.txt 2>&1 &
+	# single quote (just treat the content inside it as a string) vs double quote in bash
+	# $ echo "$(echo "upg")"
+	# upg
+	# $ echo '$(echo "upg")'
+	# $(echo "upg")
+	#
+	content += '\nwait\n'       # must has this line
+	# The bash wait command is a Shell command that waits for background running processes to complete and returns the exit status.
+	# Without any parameters, the wait command waits for all background processes to finish before continuing the script.
+	content += 'echo $!\n'  # stores the background process PID
+	content += 'echo $?\n'  # $? stores the exit status.
 	content += '\necho \'done\''
 	# sh_file = f'{OUT_DIR}/{dataset_name}-{dataset_detail}-{algorithm_name}-{algorithm_detail}.sh'
 	sh_file = f'{OUT_DIR}/sbatch.sh'
@@ -134,7 +239,7 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 			n_clients = 10
 			n_clusters = 10
 			tmp_list = []
-			for n in [50, 100, 500, 1000, 3000, 5000]:
+			for n in [5000]: #[50, 100, 500, 1000, 3000, 5000]:
 				p1 = f'n_{n}:ratio_0.00:diff_sigma_n'
 				tmp_list.append((p1, n_clusters, n_clients))
 			data_details_lst += tmp_list
@@ -208,7 +313,7 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 			n_clients = 9
 			n_clusters = 9
 			tmp_list = []
-			for n in [50, 100, 500, 800, 1000, 1500, 2000]:
+			for n in [2000]: #[50, 100, 500, 800, 1000, 1500, 2000]:
 				# there are 20 clients and each client has n users' data.
 				p1 = f'n_{n}:ratio_0.00:diff_sigma_n'
 				tmp_list.append((p1, n_clusters, n_clients))
@@ -266,8 +371,9 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 			# data_details_lst += tmp_list
 
 			tmp_list = []
-			N1S = [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]
-			N = 5000
+			# N1S = [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]
+			N1S = [5000]    # (49548, 115) datasets/NBAIOT/Danmini_Doorbell/benign_traffic.csv
+			N = 9000        # (92141, 115) datasets/NBAIOT/Danmini_Doorbell/gafgyt_attacks/tcp.csv
 			n_clusters = 2
 			n_clients = 2
 			for n1 in N1S:
@@ -362,7 +468,7 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 
 			tmp_list = []
 			N = 5000  # total cases: 9*7
-			for ratio in ratios:  # ratios:
+			for ratio in [0.0]:  # ratios:
 				for n1 in [N]:
 					for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
 						for n2 in [N]:
@@ -374,19 +480,19 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 
 			data_details_lst += tmp_list
 
-			tmp_list = []
-			N = 5000  # total cases: 9*7
-			for ratio in [0.0]:  # ratios:
-				for n1 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
-					for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
-						for n2 in [N]:
-							for sigma2 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
-								for n3 in [N]:
-									for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
-										p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
-										tmp_list.append((p1, n_clusters, n_clients))
-
-			data_details_lst += tmp_list
+			# tmp_list = []
+			# N = 5000  # total cases: 9*7
+			# for ratio in [0.0]:  # ratios:
+			# 	for n1 in [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]:
+			# 		for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+			# 			for n2 in [N]:
+			# 				for sigma2 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+			# 					for n3 in [N]:
+			# 						for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
+			# 							p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
+			# 							tmp_list.append((p1, n_clusters, n_clients))
+			#
+			# data_details_lst += tmp_list
 
 			# tmp_list = []
 			# N = 5000  # total cases: 9*7
@@ -658,15 +764,15 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 	tot_cnt = 0
 	# ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
 	# dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS'] # ['NBAIOT'] # '3GAUSSIANS', '10GAUSSIANS', 'NBAIOT',  'FEMNIST', 'SENT140'
-	dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'DRYBEAN','GASSENSOR','SELFBACK', 'MNIST']  #
+	dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK','GASSENSOR','SELFBACK', 'MNIST']  #
 	dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT','DRYBEAN', 'GASSENSOR','SELFBACK']  #
-	dataset_names = ['FEMNIST']
+	dataset_names = ['NBAIOT'] #
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
 		'federated_client_init_first',  # client initialization first : server average
 		'federated_greedy_kmeans',  # client initialization first: greedy: server average
-		# 'Our_greedy_center',
+		# # 'Our_greedy_center',
 		# 'Our_greedy_2K',
 		# 'Our_greedy_K_K',
 		# 'Our_greedy_concat_Ks',
@@ -674,70 +780,79 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 	]
 	datasets = get_datasets_config_lst(dataset_names)
 	for dataset in datasets:
-		args1 = copy.deepcopy(args)
-		SEED = args1['SEED']
-		args1['DATASET']['name'] = dataset['name']
-		args1['DATASET']['detail'] = dataset['detail']
-		args1['N_CLIENTS'] = dataset['n_clients']
-		args1['N_CLUSTERS'] = dataset['n_clusters']
-		N_CLIENTS = args1['N_CLIENTS']
-		N_REPEATS = args1['N_REPEATS']
-		N_CLUSTERS = args1['N_CLUSTERS']
-		NORMALIZE_METHOD = args1['NORMALIZE_METHOD']
-		IS_PCA = args1['IS_PCA']
-		if args1['DATASET']['name']  == 'MNIST' and IS_PCA:
-			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}',
-			                                                 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
-		else:
-			args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
-		dataset_detail = args1['DATASET']['detail']
-
-		### generate dataset first to save time.
-		args1['data_file'] = generate_dataset(args1)
-
 		algorithms = get_algorithms_config_lst(py_names, dataset['n_clusters'])
 		for algorithm in algorithms:
-			args2 = copy.deepcopy(args1)
-			print(f'\n*** {tot_cnt}th experiment ***')
-			args2['IS_FEDERATED'] = algorithm['IS_FEDERATED']
-			args2['ALGORITHM']['py_name'] = algorithm['py_name']
-			# initial_method = args2['ALGORITHM']['initial_method']
-			args2['ALGORITHM']['server_init_method'] = algorithm['server_init_method']
-			server_init_method = args2['ALGORITHM']['server_init_method']
-			args2['ALGORITHM']['client_init_method'] = algorithm['client_init_method']
-			client_init_method = args2['ALGORITHM']['client_init_method']
-			# args2['ALGORITHM']['name'] = algorithm['py_name'] + '_' + f'{server_init_method}|{client_init_method}'
-			TOLERANCE = args2['TOLERANCE']
-			NORMALIZE_METHOD = args2['NORMALIZE_METHOD']
-			args2['ALGORITHM']['detail'] = f'{SEPERTOR}'.join([f'R_{N_REPEATS}',
-			                                                   f'{server_init_method}|{client_init_method}',
-			                                                   f'{TOLERANCE}', f'{NORMALIZE_METHOD}'])
-			args2['OUT_DIR'] = os.path.join(OUT_DIR, args2['DATASET']['name'], f'{dataset_detail}',
-			                                args2['ALGORITHM']['py_name'], args2['ALGORITHM']['detail'])
-			if os.path.exists(args2['OUT_DIR']):
-				shutil.rmtree(args2['OUT_DIR'])
-				# shutil.rmtree(os.path.join(OUT_DIR, args2['DATASET']['name'], f'{dataset_detail}'))
-			else:
-				os.makedirs(args2['OUT_DIR'])
-			new_config_file = os.path.join(args2['OUT_DIR'], 'config_file.yaml')
-			if VERBOSE >= 2:
-				pprint(new_config_file)
-			config.dump(new_config_file, args2)
-			args2['config_file'] = new_config_file
-			if VERBOSE >= 5:
-				pprint(args2, sort_dicts=False)
+			print(f'*** {tot_cnt}th experiment ***:', dataset['name'], algorithm['py_name'])
+			Args_lst = []
+			for i_repeat in range(N_REPEATS):
+				seed_data = i_repeat * 10   # data seed
+				print('\n***', dataset['name'], i_repeat, seed_data)
+				args1 = copy.deepcopy(args)
+				SEED = args1['SEED'] # model seed
+				args1['SEED_DATA'] = seed_data
+				args1['DATASET']['name'] = dataset['name']
+				args1['DATASET']['detail'] = dataset['detail']
+				args1['N_CLIENTS'] = dataset['n_clients']
+				args1['N_CLUSTERS'] = dataset['n_clusters']
+				N_CLIENTS = args1['N_CLIENTS']
+				N_REPEATS = args1['N_REPEATS']
+				N_CLUSTERS = args1['N_CLUSTERS']
+				NORMALIZE_METHOD = args1['NORMALIZE_METHOD']
+				IS_PCA = args1['IS_PCA']
+				# if args1['DATASET']['name']  == 'MNIST' and IS_PCA:
+				# 	args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}',
+				# 	                                                 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
+				# else:
+				args1['DATASET']['detail'] = os.path.join(f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}', f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}']), f'SEED_DATA_{seed_data}')
+				dataset_detail = args1['DATASET']['detail']
 
-			if IS_DEBUG:
-				### run a single experiment for debugging the code
-				main_single.main(new_config_file)
-				return
+				### generate dataset first to save time.
+				# TODO: update data generation in a lazy way.
+				args1['data_file'] = generate_dataset(args1)
 
-			# get sbatch.sh
-			gen_sh(args2)
-			tot_cnt += 1
+				args2 = copy.deepcopy(args1)
+				args2['IS_FEDERATED'] = algorithm['IS_FEDERATED']
+				args2['ALGORITHM']['py_name'] = algorithm['py_name']
+				# initial_method = args2['ALGORITHM']['initial_method']
+				args2['ALGORITHM']['server_init_method'] = algorithm['server_init_method']
+				server_init_method = args2['ALGORITHM']['server_init_method']
+				args2['ALGORITHM']['client_init_method'] = algorithm['client_init_method']
+				client_init_method = args2['ALGORITHM']['client_init_method']
+				# args2['ALGORITHM']['name'] = algorithm['py_name'] + '_' + f'{server_init_method}|{client_init_method}'
+				TOLERANCE = args2['TOLERANCE']
+				NORMALIZE_METHOD = args2['NORMALIZE_METHOD']
+				args2['ALGORITHM']['detail'] = f'{SEPERTOR}'.join([f'R_{N_REPEATS}',
+				                                                   f'{server_init_method}|{client_init_method}',
+				                                                   f'{TOLERANCE}', f'{NORMALIZE_METHOD}'])
+				args2['OUT_DIR'] = os.path.join(OUT_DIR, args2['DATASET']['name'], f'{dataset_detail}',
+				                                args2['ALGORITHM']['py_name'], args2['ALGORITHM']['detail'])
+				if os.path.exists(args2['OUT_DIR']):
+					shutil.rmtree(args2['OUT_DIR'])
+					# shutil.rmtree(os.path.join(OUT_DIR, args2['DATASET']['name'], f'{dataset_detail}'))
+				else:
+					os.makedirs(args2['OUT_DIR'])
+				new_config_file = os.path.join(args2['OUT_DIR'], 'config_file.yaml')
+				if VERBOSE >= 2:
+					pprint(new_config_file)
+				config.dump(new_config_file, args2)
+				args2['config_file'] = new_config_file
+				if VERBOSE >= 5:
+					pprint(args2, sort_dicts=False)
+
+				if IS_DEBUG:
+					### run a single experiment for debugging the code
+					main_single.main(new_config_file)
+					return
+
+				# get sbatch.sh
+				# gen_sh(args2)
+				Args_lst.append(copy.deepcopy(args2))
+				tot_cnt += 1
+
+			gen_all_sh(Args_lst)
 	print(f'*** Total cases: {tot_cnt}')
 
 
 if __name__ == '__main__':
-	main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5)
-	main(N_REPEATS=5, OVERWRITE=True, IS_DEBUG=False, VERBOSE=1)
+	# main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5)
+	main(N_REPEATS=100, OVERWRITE=True, IS_DEBUG=False, VERBOSE=2)

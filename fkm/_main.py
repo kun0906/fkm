@@ -322,8 +322,8 @@ def run_model(args):
 	history['raw_true_centroids'] = raw_true_centroids
 	print(f'after normalization, true_centroids:\n{raw_true_centroids} \nwhen normalize_method = {NORMALIZE_METHOD}')
 	# history = {'x': raw_x, 'y': raw_y, 'results': []}
-	SEEDS = [10 * v ** 2 for v in range(1, N_REPEATS + 1, 1)]
-	# SEEDS = [160]
+	# SEEDS = [10 * v ** 2 for v in range(1, N_REPEATS + 1, 1)]
+	SEEDS = [42]    # we fix the model seed; however, the data seed is different.
 	history['SEEDS'] = SEEDS
 
 	from fkm.cluster import centralized_kmeans, federated_server_init_first, federated_client_init_first, \
@@ -347,6 +347,7 @@ def run_model(args):
 			for spl in SPLITS:
 				X[spl] = np.concatenate(X[spl], axis=0)
 				Y[spl] = np.concatenate(Y[spl], axis=0)
+				print(spl, X[spl].shape, Y[spl].shape)
 
 		t1 = time.time()
 		# for Centralized Kmeans, we use server_init_centroids as init_centroids.
@@ -415,7 +416,7 @@ def run_model(args):
 				save_history2txt(history[seed], out_file=seed_file + '.txt')
 			except Exception as e:
 				print(f'save_history2txt() fails when SEED={seed}, Error: {e}')
-		if VERBOSE >= 3:
+		if VERBOSE >= 2:
 			pprint(f'seed:{seed}, '
 			       f'scores:{scores}')
 	try:

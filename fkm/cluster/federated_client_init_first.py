@@ -178,6 +178,7 @@ class KMeansFederated(KMeans):
 		return updates_sum, counts, KM_params
 
 	def fit(self, X_dict, y_dict, splits=None, record_at=None):
+		self.is_train_finished = False
 		X = X_dict['train']
 		self.n_clients = len(X)
 		self.dim = X[0].shape[1]
@@ -203,6 +204,7 @@ class KMeansFederated(KMeans):
 		self.training_iterations = self.max_iter
 		self.history = []
 		for iteration in range(0, self.max_iter):
+			self.training_iterations = iteration
 			r = np.random.RandomState(iteration * max(1, self.random_state))
 			if iteration % 10 == 0:  # only choose once. If choose everytime, the model won't converge.
 				indices = r.choice(range(self.n_clients), size=n_clients_per_round,
@@ -340,6 +342,9 @@ class KMeansFederated(KMeans):
 		if record_at is not None:
 			#  NOTE: only for dummy data
 			plot_progress(means_record, stds_record, record_at)
+
+		self.is_train_finished = True
+		return
 
 
 # self.cluster_centers_ = centroids

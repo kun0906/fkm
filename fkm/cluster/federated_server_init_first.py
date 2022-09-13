@@ -176,6 +176,7 @@ class KMeansFederated(KMeans):
         return updates_sum, counts, KM_params
 
     def fit(self, X_dict, y_dict, splits=None, record_at=None):
+        self.is_train_finished = False
         X = X_dict['train']
         self.n_clients = len(X)
         self.dim = X[0].shape[1]
@@ -202,6 +203,7 @@ class KMeansFederated(KMeans):
         self.training_iterations = self.max_iter
         self.history = []
         for iteration in range(0, self.max_iter):
+            self.training_iterations = iteration
             r = np.random.RandomState(iteration * max(1, self.random_state))
             if iteration % 10 == 0:  # only choose once. If choose everytime, the model won't converge.
                 indices = r.choice(range(self.n_clients), size=n_clients_per_round,
@@ -264,11 +266,14 @@ class KMeansFederated(KMeans):
                     mx = np.max(mx, axis=0)
                     r = np.random.RandomState( max(1, self.random_state))
                     for i_ in range(self.dim):  # for each dimension, we sample data points
+                        t = (mx[i_] -mn[i_])/10
+                        a = mn[i_] + t
+                        b = mx[i_] - t
                         # changing random_state to get different centroid for each cluster
-                        centroids[:, i_] = r.uniform(mn[i_], mx[i_], size=self.n_clusters)  # (1, self.dim)   [0, 1)
+                        centroids[:, i_] = r.uniform(a, b, size=self.n_clusters)  # (1, self.dim)   [0, 1)
 
-                    # make sure each centroid that has a point assigned to it at least
-                    centroids = check_centroids(centroids, clients_in_round)
+                    # # make sure each centroid that has a point assigned to it at least
+                    # centroids = check_centroids(centroids, clients_in_round)
 
                 elif self.server_init_method == 'gaussian':
                     # changing random_state to get different centroid for each cluster
@@ -276,8 +281,8 @@ class KMeansFederated(KMeans):
                     ss = self.params['global_stdscaler']
                     centroids = r.multivariate_normal(ss.mean_, np.diag(ss.scale_), size=(self.n_clusters, ))
 
-                    # make sure each centroid that has a point assigned to it at least
-                    centroids = check_centroids(centroids, clients_in_round)
+                    # # make sure each centroid that has a point assigned to it at least
+                    # centroids = check_centroids(centroids, clients_in_round)
                 else:
                     msg = f'{self.server_init_method}'
                     raise NotImplementedError(msg)
@@ -402,6 +407,10 @@ class KMeansFederated(KMeans):
 
         # self.cluster_centers_ = centroids
         # return centroids, overall_counts
+
+        self.is_train_finished = True
+        return
+
 
 #
 # if __name__ == "__main__":

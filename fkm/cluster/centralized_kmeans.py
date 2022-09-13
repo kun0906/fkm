@@ -69,6 +69,7 @@ class KMeans:
 
     @timer
     def fit(self, X_dict, y_dict, splits, record_at=None):
+        self.is_train_finished = False
         X = X_dict['train']
         # self.n_clients = len(X)
         self.n_points, self.dim = X.shape
@@ -82,6 +83,7 @@ class KMeans:
         to_reassign = np.zeros(self.n_clusters)
         self.training_iterations = self.max_iter
         for iteration in range(0, self.max_iter):
+            self.training_iterations = iteration
             if self.verbose >= 2:
                 print(f'iteration: {iteration}')
             if iteration == 0:
@@ -198,6 +200,7 @@ class KMeans:
         # self.labels_ = labels
 
         # print(f'Training result: centers: {centroids}')
+        self.is_train_finished = True
         return
 
     def predict(self, x):

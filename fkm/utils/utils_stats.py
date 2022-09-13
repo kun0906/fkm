@@ -1,3 +1,6 @@
+# Source Generated with Decompyle++
+# File: utils_stats.cpython-39.pyc (Python 3.9)
+
 import collections
 import copy
 import os
@@ -9,9 +12,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sklearn
 from sklearn import metrics
-
+from sklearn.metrics import pairwise_distances
+from sklearn.metrics.cluster._unsupervised import check_number_of_labels
+from sklearn.preprocessing import LabelEncoder
+from sklearn.utils import check_X_y, _safe_indexing
 from fkm.utils.utils_func import timer
-
+from fkm.utils.silhouette_plot import silhouette_plot
 project_dir = os.path.dirname(os.getcwd())
 
 def davies_bouldin(x, labels, centroids, verbose=False):
@@ -88,28 +94,77 @@ def euclidean_dist(x, labels, centroids):
     dist = np.mean(distances)
     return dist
 
-#
-# def evaluate(kmeans, x, splits=['train', 'test'], use_metric='euclidean', federated=False, verbose=False):
-#     scores = {}
-#     centroids = kmeans.centroids
-#     for split in splits:
-#         if federated:
-#             x[split] = np.concatenate(x[split], axis=0)
-#         labels = kmeans.predict(x[split])  # y and labels misalign, so you can't use y directly
-#         if verbose:
-#             print(split, use_metric)
-#         if "davies_bouldin" == use_metric:
-#             score = davies_bouldin(x[split], labels, centroids, verbose)
-#         elif "silhouette" == use_metric:
-#             # silhouette (takes forever) -> need metric with linear execution time wrt data size
-#             score = metrics.silhouette_score(x[split], labels)
-#         else:
-#             assert use_metric == 'euclidean'
-#             score = euclidean_dist(x[split], labels, centroids)
-#         scores[split] = score
-#         if verbose:
-#             print(score)
-#     return scores
+
+def get_min_max(X):
+    mn = np.inf
+    mx = -(np.inf)
+    (m, n) = X.shape
+    for i in range(m):
+        for j in range(i + 1, n):
+            mn = min(mn, X[i][j])
+            mx = max(mx, X[i][j])
+    return (mn, mx)
+
+
+def davies_bouldin_score_normalized(X, labels):
+    """Compute the Davies-Bouldin score.
+
+    The score is defined as the average similarity measure of each cluster with
+    its most similar cluster, where similarity is the ratio of within-cluster
+    distances to between-cluster distances. Thus, clusters which are farther
+    apart and less dispersed will result in a better score.
+
+    The minimum score is zero, with lower values indicating better clustering.
+
+    Read more in the :ref:`User Guide <davies-bouldin_index>`.
+
+    .. versionadded:: 0.20
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        A list of ``n_features``-dimensional data points. Each row corresponds
+        to a single data point.
+
+    labels : array-like of shape (n_samples,)
+        Predicted labels for each sample.
+
+    Returns
+    -------
+    score: float
+        The resulting Davies-Bouldin score.
+    """
+    (X, labels) = check_X_y(X, labels)
+    le = LabelEncoder()
+    labels = le.fit_transform(labels)
+    (n_samples, _) = X.shape
+    n_labels = len(le.classes_)
+    check_number_of_labels(n_labels, n_samples)
+    intra_dists = np.zeros(n_labels)
+    centroids = np.zeros((n_labels, len(X[0])))
+    for k in range(n_labels):
+        cluster_k = _safe_indexing(X, labels == k)
+        centroid = cluster_k.mean(axis=0)
+        centroids[k] = centroid
+        intra_dists[k] = np.average(pairwise_distances(cluster_k, [centroid]))
+    centroid_distances = pairwise_distances(centroids)
+    if np.allclose(intra_dists, 0) or np.allclose(centroid_distances, 0):
+        return 0
+    centroid_distances[centroid_distances == 0] = np.inf
+    combined_intra_dists = intra_dists[:, None] + intra_dists
+    # print(combined_intra_dists)
+    # print(centroid_distances)
+    (mn, mx) = get_min_max(centroid_distances)
+    if mn == mx:
+        mn = 0
+    centroid_distances = centroid_distances / (mx - mn)
+    (mn, mx) = get_min_max(combined_intra_dists)
+    if mn == mx:
+        mn = 0
+    combined_intra_dists = combined_intra_dists / (mx - mn)
+    scores = np.max(combined_intra_dists / centroid_distances,axis=1)
+    return np.mean(scores)
+
 
 @timer
 def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verbose=False):
@@ -125,8 +180,8 @@ def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verb
             if y is not None:
                 y[split] = np.concatenate(y[split], axis=0)
         labels_pred = kmeans.predict(x[split])  # y and labels misalign, so you can't use y directly
-        labels_true = [str(v) for v in y[split]]
-        labels_pred = [str(v) for v in labels_pred]
+        labels_true = np.asarray([str(v) for v in y[split]])
+        labels_pred = np.asarray([str(v) for v in labels_pred])
         _true = dict(collections.Counter(labels_true))
         _pred = dict(collections.Counter(labels_pred))
         if verbose >= 5: print(f'labels_pred:', _pred)
@@ -199,14 +254,32 @@ def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verb
         try:
             # db = davies_bouldin(x[split], labels, centroids, verbose)
             db = metrics.davies_bouldin_score(x[split], labels_pred)
+            db_normalized = davies_bouldin_score_normalized(x[split], labels_pred)
             # print(f'db: {db}, db2: {db2}')
         except Exception as e:
             db = f'Error: {e}'
+            db_normalized = f'Error: {e}'
 
         try:
             sil = metrics.silhouette_score(x[split], labels_pred)
+            sil_weighted_ = []
+            # le = LabelEncoder()
+            # labels = le.fit_transform(y_pred)
+            # n_samples = len(labels)
+            sample_silhouette_values = metrics.silhouette_samples(x[split], labels_pred)
+            for i in sorted(np.unique(labels_pred)):
+                ith_cluster_silhouette_values = sample_silhouette_values[labels_pred == i]
+                sil_weighted_.append((ith_cluster_silhouette_values, ith_cluster_silhouette_values.shape[0]))
+            sil_weighted = np.mean([np.sum(v_)/n_ for v_, n_ in sil_weighted_])
+
+            training_iterations = kmeans.training_iterations
+            if training_iterations % 5 == 0 or kmeans.is_train_finished:
+                out_file = os.path.join(kmeans.params['OUT_DIR'], f'SEED_' + str(kmeans.params['SEED']), f'{training_iterations}.png')
+                silhouette_plot(x[split], labels_pred, centroids, out_file, is_show=kmeans.params['IS_SHOW'])
+
         except Exception as e:
             sil = f'Error: {e}'
+            sil_weighted = f'Error: {e}'
 
         try:
             euclidean = euclidean_dist(x[split], labels_pred, centroids)
@@ -215,7 +288,9 @@ def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verb
 
         score = {
             'davies_bouldin': db,
+            'db_normalized': db_normalized,
             'silhouette': sil,
+            'sil_weighted': sil_weighted,
             'ch': ch,
             'euclidean': euclidean,
             'n_clusters': len(centroids),

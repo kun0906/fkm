@@ -18,7 +18,7 @@ from fkm.datasets.nbaiot import nbaiot_user_percent, nbaiot_user_percent_client1
 from fkm.datasets.selfback import selfback_diff_sigma_n
 from fkm.datasets.sent140 import sent140_user_percent, sent140_diff_sigma_n
 from fkm.datasets.gaussian3 import gaussian3_diff_sigma_n
-from fkm.utils.utils_func import timer, check_path
+from fkm.utils.utils_func import timer
 
 
 @timer
@@ -41,7 +41,6 @@ def generate_dataset(args):
 	N_REPEATS = args['N_REPEATS']
 	N_CLUSTERS = args['N_CLUSTERS']
 	data_file = os.path.join(args['IN_DIR'], dataset_name,  f'{dataset_detail}.dat')
-	check_path(data_file)
 	args['data_file'] = data_file
 	if args['OVERWRITE'] and os.path.exists(data_file):
 		# here could be some issue for multi-tasks, please double-check before calling this function.
@@ -155,7 +154,9 @@ def generate_dataset(args):
 		msg = f'{dataset_name}, {dataset_detail}'
 		raise NotImplementedError(msg)
 
-	check_path(data_file)
+	tmp_dir = os.path.dirname(data_file)
+	if not os.path.exists(tmp_dir):
+		os.makedirs(tmp_dir)
 
 	with open(data_file, 'wb') as f:
 		pickle.dump(data, f)

@@ -1,27 +1,27 @@
 ### A Python project for comparing the proposed greedy centroid initialization with other initialization methods of federated K-means, which includes a centralized/traditional K-means (CKM) and four federated K-means (FKM).    
 
-# Environment requirement
+## Environment requirement
   - Conda 4.10.3 # Conda -V
   - Python 3.9.7 # Python3 -V
   - Pip3 21.2.4 # Pip3 -V
 `
-# Installation instruction
+## Installation instruction
   - pip3 install -r requirements.txt
   
-# Source code:
+## Source code:
 - fkm 
   - datasets
   - clustering
   - utils
   - results
 
-# Dataset:
+## Dataset:
 - FEMINIST: _downloaded from 'LEAF: https://leaf.cmu.edu/'_
 - GAUSSIAN2: _simulated 2 clusters from 2 Gaussian distributions._
 - GAUSSIAN3: _simulated 3 clusters from 3 Gaussian distributions._
 - GAUSSIAN5: _simulated 5 clusters from 5 Gaussian distributions._
 
-# Execution
+## Execution
   ```shell
   cd fkm/fkm/
   PYTHONPATH='..' python3 centralized_kmeans.py

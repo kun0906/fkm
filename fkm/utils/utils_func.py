@@ -141,6 +141,11 @@ def timer(func):
 
     return wrap_func
 
+def check_path(file):
+    tmp_dir = os.path.dirname(file)
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
+
 
 @timer
 def plot_centroids(history, out_dir='results', title='', fig_name='fig', params={}, is_show=False):

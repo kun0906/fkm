@@ -127,9 +127,7 @@ def gaussian10_diff_sigma_n(args, random_state=42, **kwargs):
 		return X1, y1, X2, y2, X3, y3
 
 	X1, y1, X2, y2, X3, y3 = get_xy()
-	if 'Centralized' in args['ALGORITHM']['py_name']:  # for Centralized Kmeans, ratios should have no impact.
-		pass
-	elif 2 * ratio <= 0 or 2 * ratio >= 1:
+	if 2 * ratio <= 0 or 2 * ratio >= 1:
 		pass
 	else:
 		# client 1: 90% cluster1, 10 % cluster2, 10 % cluster3

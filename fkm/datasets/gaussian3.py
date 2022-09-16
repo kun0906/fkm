@@ -356,9 +356,7 @@ def gaussian3_mix_clusters_per_client(params, random_state=42, **kwargs):
     # # new_y2 = np.concatenate([y1[indices3], y2[indices4]], axis=0)
     # new_y2 = np.ones((new_X2.shape[0],))
     # X1, y1, X2, y2 = new_X1, new_y1, new_X2, new_y2
-    if 'Centralized' in params['p2']:  # for Centralized Kmeans, ratios should have no impact.
-        pass
-    elif 2 * ratio <= 0 or 2 * ratio >= 1:
+    if 2 * ratio <= 0 or 2 * ratio >= 1:
         pass
     else:
         # client 1: 90% cluster1, 10 % cluster2, 10 % cluster3
@@ -1001,6 +999,7 @@ def gaussian3_diff_sigma_n(args, random_state=42, **kwargs):
 
     def get_xy(n=0):
 
+        ############
         # client 1
         mus = [-1, 0]
         # sigma = 0.1
@@ -1009,8 +1008,16 @@ def gaussian3_diff_sigma_n(args, random_state=42, **kwargs):
         # cov = np.asarray([[sigma, sigma], [sigma, sigma]])
         r = np.random.RandomState(random_state)
         X1 = r.multivariate_normal(mus, cov, size=n1)
-        y1 = np.asarray([0] * n1)
+        y1 = np.asarray([1] * n1)
+        # noise 1 
+        mus = [-10, 0]
+        cov = np.asarray([[0.1, 0], [0, 0.1]])
+        X_noise = r.multivariate_normal(mus, cov, size=int(n1*0.01))
+        y_noise = np.asarray([11] * X_noise.shape[0])
+        X1 = np.concatenate([X1, X_noise], axis=0)
+        y1 = np.concatenate([y1, y_noise], axis=0)
 
+        ############
         # client 2
         mus = [1, 0]
         # sigma = 0.2
@@ -1018,20 +1025,30 @@ def gaussian3_diff_sigma_n(args, random_state=42, **kwargs):
         cov = np.asarray([[sigma2_0, 0], [0, sigma2_1]])
         # cov = np.asarray([[sigma, -sigma], [-sigma, sigma]])
         X2 = r.multivariate_normal(mus, cov, size=n2)
-        y2 = np.asarray([1] * n2)
+        y2 = np.asarray([2] * n2)
+        # noise 2 
+        mus = [10, 0]
+        cov = np.asarray([[0.1, 0], [0, 0.1]])
+        X_noise = r.multivariate_normal(mus, cov, size=int(n2*0.01))
+        y_noise = np.asarray([22] * X_noise.shape[0])
+        X2 = np.concatenate([X2, X_noise], axis=0)
+        y2 = np.concatenate([y2, y_noise], axis=0)
 
+        ############
         # client 3
         mus = [0, 3]
         # n3 = 10000
         # sigma = 0.3
         cov = np.asarray([[sigma3_0, 0], [0, sigma3_1]])
         X3 = r.multivariate_normal(mus, cov, size=n3)
-        y3 = np.asarray([2] * n3)
-
-        # # mus = [0, -3]
-        # cov = np.asarray([[sigma, 0], [0, sigma]])
-        # X4 = r.multivariate_normal(mus, cov, size=n1)
-        # y4 = np.asarray([1] * n1)
+        y3 = np.asarray([3] * n3)
+         # noise 3
+        mus = [0, 10]
+        cov = np.asarray([[0.1, 0], [0, 0.1]])
+        X_noise = r.multivariate_normal(mus, cov, size=int(n3*0.01))
+        y_noise = np.asarray([33] * X_noise.shape[0])
+        X3 = np.concatenate([X3, X_noise], axis=0)
+        y3 = np.concatenate([y3, y_noise], axis=0)
 
         # X1 = np.concatenate([X1, X2], axis=0)
         # y1 = np.concatenate([y1, y2], axis=0)
@@ -1041,9 +1058,7 @@ def gaussian3_diff_sigma_n(args, random_state=42, **kwargs):
         return X1, y1, X2, y2, X3, y3
 
     X1, y1, X2, y2, X3, y3 = get_xy()
-    if 'Centralized' in args['ALGORITHM']['py_name']:   # for Centralized Kmeans, ratios should have no impact.
-        pass
-    elif 2* ratio <= 0 or 2* ratio >= 1:
+    if 2* ratio <= 0 or 2* ratio >= 1:
         pass
     else:
         # client 1: 90% cluster1, 10 % cluster2, 10 % cluster3

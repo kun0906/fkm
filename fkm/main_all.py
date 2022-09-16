@@ -10,7 +10,7 @@
   https://www.tensorflow.org/install/source#linux
 '
 #ssh ky8517@tigergpu.princeton.edu
-srun --nodes=1  --mem=128G --ntasks-per-node=1 --time=20:00:00 --pty bash -i
+srun --time=2:00:00 --pty bash -i
 srun --nodes=1  --mem=128G --ntasks-per-node=1 --time=20:00:00 --pty bash -i
 #srun --nodes=1 --gres=gpu:1 --mem=128G --ntasks-per-node=1 --time=20:00:00 --pty bash -i
 cd /scratch/gpfs/ky8517/fkm/fkm
@@ -28,6 +28,10 @@ As as result, if the file path contains \, &, $, please use single quote
 
 linux: Difference between terms: "option", "argument", and "parameter"?
 https://stackoverflow.com/questions/36495669/difference-between-terms-option-argument-and-parameter
+
+
+# check why the process is killed
+dmesg -T| grep -E -i -B100 'killed process'
 
 """
 # Email: kun.bj@outllok.com
@@ -139,7 +143,8 @@ def gen_all_sh(Args_lst):
 	# algorithm_detail = args['ALGORITHM']['detail']
 	# # n_clusters = args['ALGORITHM']['n_clusters']
 	# config_file = args['config_file']
-	OUT_DIR = os.path.join(*args['OUT_DIR'].split('/')[:3])
+	# OUT_DIR = os.path.join(*args['OUT_DIR'].split('/')[:4])
+	OUT_DIR = args['OUT_DIR']
 
 	job_name = f'{dataset_name}-{dataset_detail}'
 	# tmp_dir = '~tmp'
@@ -153,20 +158,20 @@ def gen_all_sh(Args_lst):
 		t = 48
 	content = fr"""#!/bin/bash
 #SBATCH --job-name={OUT_DIR}         # create a short name for your job
-#SBATCH --nodes=1                # node count
-#SBATCH --ntasks=1               # total number of tasks across all nodes
-#SBATCH --cpus-per-task=5        # cpu-cores per task (>1 if multi-threaded tasks)
-#SBATCH --mem-per-cpu=4G         # memory per cpu-core (4G is default)
+## SBATCH --nodes=1                # node count
+## SBATCH --ntasks=1               # total number of tasks across all nodes
+## SBATCH --cpus-per-task=5        # cpu-cores per task (>1 if multi-threaded tasks)
+## SBATCH --mem=40G
+#SBATCH --mem-per-cpu=8G         # memory per cpu-core (4G is default)
 #SBATCH --time={t}:00:00          # total run time limit (HH:MM:SS)
 ## SBATCH --output={OUT_DIR}/%j-{job_name}-out.txt
 ## SBATCH --error={OUT_DIR}/%j-{job_name}-err.txt
 #SBATCH --output={OUT_DIR}/out.txt
 #SBATCH --error={OUT_DIR}/err.txt
-
 ### SBATCH --mail-type=begin        # send email when job begins
-### SBATCH --mail-user=kun.bj@cloud.com # not work \
-### SBATCH --mail-user=<YourNetID>@princeton.edu\
-#SBATCH --mail-type=end          # send email when job ends\
+### SBATCH --mail-user=kun.bj@cloud.com # not work 
+### SBATCH --mail-user=<YourNetID>@princeton.edu
+#SBATCH --mail-type=end          # send email when job ends
 #SBATCH --mail-user=ky8517@princeton.edu     # which will cause too much email notification. 
 
 module purge
@@ -179,25 +184,30 @@ python3 -V
 
 """
 	content += "\nexport PYTHONPATH=\"${PYTHONPATH}:..\" \n"
-	for args in Args_lst:
+	for i, args in enumerate(Args_lst):
 		config_file_ = args['config_file']
 		out_dir_ = args['OUT_DIR']
 		# content += '\n' + f"PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 {algorithm_py_name} --dataset '{dataset_name}' " \
 		#                   f"--data_details '{dataset_detail}' --algorithm '{algorithm_name}' --n_clusters '{n_clusters}' --n_clients '{n_clients}' \n"
-		content +=  f"\nPYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 main_single.py --config_file '{config_file_}' > '{out_dir_}/a.txt'  2>&1 & \n"
-
+		content +=  f"\nPYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 main_single.py --config_file '{config_file_}' > '{out_dir_}/a.txt' 2>&1  &\n"
+		# if i == 0: 	# let the first one run first to generate the data and avoid unknown conflict for the rest. 
+		# 	content += "echo 'Finish the first one first...'\n"  
+		content += "\nwait\n"       # must has this line
+		content += "echo $!\n"  # stores the background process PID
+		content += "echo $?\n"  # $? stores the exit status.
+		content += f"echo \'Finish {i}-th args.\'"  # $? stores the exit status.
 	# single quote (just treat the content inside it as a string) vs double quote in bash
 	# $ echo "$(echo "upg")"
 	# upg
 	# $ echo '$(echo "upg")'
 	# $(echo "upg")
 	#
-	content += '\nwait\n'       # must has this line
+	content += "\nwait\n"       # must has this line
 	# The bash wait command is a Shell command that waits for background running processes to complete and returns the exit status.
 	# Without any parameters, the wait command waits for all background processes to finish before continuing the script.
-	content += 'echo $!\n'  # stores the background process PID
-	content += 'echo $?\n'  # $? stores the exit status.
-	content += '\necho \'done\''
+	content += "echo $!\n"  # stores the background process PID
+	content += "echo $?\n"  # $? stores the exit status.
+	content += "\necho \'done\n"
 	# sh_file = f'{OUT_DIR}/{dataset_name}-{dataset_detail}-{algorithm_name}-{algorithm_detail}.sh'
 	sh_file = f'{OUT_DIR}/sbatch.sh'
 	with open(sh_file, 'w') as f:
@@ -372,14 +382,15 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 
 			tmp_list = []
 			# N1S = [50, 100, 500, 1000, 2000, 3000, 5000, 8000, 10000]
-			N1S = [5000]    # (49548, 115) datasets/NBAIOT/Danmini_Doorbell/benign_traffic.csv
-			N = 9000        # (92141, 115) datasets/NBAIOT/Danmini_Doorbell/gafgyt_attacks/tcp.csv
+			# N1S = [5000]    # (49548, 115) datasets/NBAIOT/Danmini_Doorbell/benign_traffic.csv
+			# N = 9000        # (92141, 115) datasets/NBAIOT/Danmini_Doorbell/gafgyt_attacks/tcp.csv
 			n_clusters = 2
 			n_clients = 2
-			for n1 in N1S:
-				for n2 in [N]:
-					p1 = f'n1_{n1}+n2_{n2}:ratio_0.00:C_2_diff_sigma_n'
-					tmp_list.append((p1, n_clusters, n_clients))
+
+			ratios = [0, 0.1, 0.3, 0.5] 
+			for ratio in ratios:
+				p1 = f'n1_5000+n2_9000:ratio_{ratio:.2f}:C_2_diff_sigma_n'
+				tmp_list.append((p1, n_clusters, n_clients))
 			data_details_lst += tmp_list
 
 			for data_detail, n_clusters, n_clients in data_details_lst:
@@ -468,7 +479,7 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 
 			tmp_list = []
 			N = 5000  # total cases: 9*7
-			for ratio in [0.0]:  # ratios:
+			for ratio in [0.1, 0.3, 0.4999]:  # ratios:
 				for n1 in [N]:
 					for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
 						for n2 in [N]:
@@ -694,13 +705,13 @@ def get_algorithms_config_lst(py_names, n_clusters=2):
 		cnt = 0
 		name = None
 		if py_name == 'centralized_kmeans':
-			for server_init_method, client_init_method in [('kmeans++', None)]:  # ('random', None)
+			for server_init_method, client_init_method in [('random', None), ('kmeans++', None)]:  # ('random', None)
 				algorithms.append({'py_name': py_name, 'name': name, 'n_clusters': n_clusters,
 				                   'server_init_method': server_init_method, 'client_init_method': client_init_method,
 				                   'IS_FEDERATED': False})
 
 		elif py_name == 'federated_server_init_first':
-			for server_init_method, client_init_method in [('min_max', None), ('random', None)]: #[('min_max', None)]:
+			for server_init_method, client_init_method in [('min_max', None)]: #[('random', None)]:
 				algorithms.append({'py_name': py_name, 'name': name, 'n_clusters': n_clusters,
 				                   'server_init_method': server_init_method, 'client_init_method': client_init_method,
 				                   'IS_FEDERATED': True})
@@ -751,7 +762,7 @@ def get_algorithms_config_lst(py_names, n_clusters=2):
 	return algorithms
 
 
-def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
+def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOSE = 5, IS_PCA = True, IS_REMOVE_OUTLIERS = True):
 	# get default config.yaml
 	config_file = 'config.yaml'
 	args = config.load(config_file)
@@ -760,13 +771,15 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 	args['N_REPEATS'] = N_REPEATS
 	args['OVERWRITE'] = OVERWRITE
 	args['VERBOSE'] = VERBOSE
+	args['IS_PCA'] = IS_PCA
+	args['IS_REMOVE_OUTLIERS'] = IS_REMOVE_OUTLIERS
 
 	tot_cnt = 0
 	# ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
 	# dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS'] # ['NBAIOT'] # '3GAUSSIANS', '10GAUSSIANS', 'NBAIOT',  'FEMNIST', 'SENT140'
 	dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK','GASSENSOR','SELFBACK', 'MNIST']  #
 	dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT','DRYBEAN', 'GASSENSOR','SELFBACK']  #
-	dataset_names = ['NBAIOT'] #
+	dataset_names = ['3GAUSSIANS', 'NBAIOT'] #
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
@@ -781,12 +794,12 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 	datasets = get_datasets_config_lst(dataset_names)
 	for dataset in datasets:
 		algorithms = get_algorithms_config_lst(py_names, dataset['n_clusters'])
-		for algorithm in algorithms:
-			print(f'*** {tot_cnt}th experiment ***:', dataset['name'], algorithm['py_name'])
+		for i_alg, algorithm in enumerate(algorithms):
+			print(f'\n*** {tot_cnt}th experiment ***:', dataset['name'], algorithm['py_name'])
 			Args_lst = []
 			for i_repeat in range(N_REPEATS):
 				seed_data = i_repeat * 10   # data seed
-				print('\n***', dataset['name'], i_repeat, seed_data)
+				print('***', dataset['name'], i_repeat, seed_data)
 				args1 = copy.deepcopy(args)
 				SEED = args1['SEED'] # model seed
 				args1['SEED_DATA'] = seed_data
@@ -799,16 +812,25 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 				N_CLUSTERS = args1['N_CLUSTERS']
 				NORMALIZE_METHOD = args1['NORMALIZE_METHOD']
 				IS_PCA = args1['IS_PCA']
+				IS_REMOVE_OUTLIERS = args1['IS_REMOVE_OUTLIERS']
 				# if args1['DATASET']['name']  == 'MNIST' and IS_PCA:
 				# 	args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}',
 				# 	                                                 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
 				# else:
-				args1['DATASET']['detail'] = os.path.join(f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}', f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}']), f'SEED_DATA_{seed_data}')
+				args1['DATASET']['detail'] = os.path.join(f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}', f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'REMOVE_OUTLIERS_{IS_REMOVE_OUTLIERS}']), f'SEED_DATA_{seed_data}')
 				dataset_detail = args1['DATASET']['detail']
 
-				### generate dataset first to save time.
+				### generate dataset first to save time. Be careful when muliti-processes are submitted to the server.
 				# TODO: update data generation in a lazy way.
-				args1['data_file'] = generate_dataset(args1)
+				if IS_GEN_DATA and i_alg == 0:
+					args1['data_file'] = generate_dataset(args1)
+				else:
+					dataset_name = args1['DATASET']['name']
+					dataset_detail = args1['DATASET']['detail']
+					args1['data_file'] = os.path.join(args1['IN_DIR'], dataset_name,  f'{dataset_detail}.dat')
+
+				print(f'arg1.data_file:',  args1['data_file'])
+				if IS_GEN_DATA: continue
 
 				args2 = copy.deepcopy(args1)
 				args2['IS_FEDERATED'] = algorithm['IS_FEDERATED']
@@ -847,12 +869,21 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 				# get sbatch.sh
 				# gen_sh(args2)
 				Args_lst.append(copy.deepcopy(args2))
-				tot_cnt += 1
 
-			gen_all_sh(Args_lst)
+			tot_cnt += 1
+			if not IS_GEN_DATA: 
+				gen_all_sh(Args_lst)  # Be careful that multi-process will operate (generate and remove) the same dataset file
 	print(f'*** Total cases: {tot_cnt}')
 
 
 if __name__ == '__main__':
-	# main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5)
-	main(N_REPEATS=100, OVERWRITE=True, IS_DEBUG=False, VERBOSE=2)
+	# main(N_REPEATS=2, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5, IS_PCA = False, IS_REMOVE_OUTLIERS = False)
+	# exit()
+
+	for IS_REMOVE_OUTLIERS in [False]:
+		for IS_PCA in [False, True]:
+			# you should run twice: the first time is to generate data and the second one is to run the models to avoid multi-processes operate on the same file. 
+			# the first time is to generate data
+			main(N_REPEATS=50, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOSE=2, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)
+			# train and evalate the models. Note that IS_GEN_DATA = False  and OVERWRITE = False 
+			main(N_REPEATS=50, OVERWRITE=False, IS_DEBUG=False, IS_GEN_DATA = False, VERBOSE=2, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)

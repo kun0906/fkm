@@ -20,6 +20,7 @@ from fkm import config
 from fkm.main_all import get_datasets_config_lst, get_algorithms_config_lst
 from fkm.utils.utils_func import load
 
+n_precision = 3
 
 def _parser_history(args):
 	OUT_DIR = args['OUT_DIR']
@@ -55,9 +56,9 @@ def _parser_history(args):
 				for seed in SEEDS:
 					# if history[seed]['scores'][split]['n_clusters'] != history[seed]['scores'][split]['n_clusters_pred']:
 					# 	continue
-					initial_centroids += [[f'{v:.5f}' for v in vs] for vs in history[seed]['initial_centroids']]
-					final_centroids += [[f'{v:.5f}' for v in vs] for vs in history[seed]['final_centroids']]
-					final_centroids_lst += ['(' + ', '.join(f'{v:.5f}' for v in vs) + ')' for vs in
+					initial_centroids += [[f'{v:.{n_precision}f}' for v in vs] for vs in history[seed]['initial_centroids']]
+					final_centroids += [[f'{v:.{n_precision}f}' for v in vs] for vs in history[seed]['final_centroids']]
+					final_centroids_lst += ['(' + ', '.join(f'{v:.{n_precision}f}' for v in vs) + ')' for vs in
 					                        history[seed]['final_centroids']]
 					training_iterations.append(history[seed]['training_iterations'])
 					durations.append(history[seed]['duration'])
@@ -113,42 +114,64 @@ def _parser_history(args):
 
 
 def parser_history(args_lst):
-	results_avg = {}
+	results_detail = {}
 	for i_args, args in enumerate(args_lst):
 		try:
 			results_avg_ = _parser_history(args)
 
 			if i_args == 0:
 				for split, vs in results_avg_.items():
-					if split not in results_avg:
-						results_avg[split] = {}
+					if split not in results_detail:
+						results_detail[split] = {}
 					for metric_, v_ in vs.items():
 						if metric_ == 'metric_names':
-							results_avg[split][metric_] = v_
+							results_detail[split][metric_] = v_
+						elif metric_ in ['final_centroids_lst']:
+							results_detail[split][metric_] = copy.deepcopy(v_)
 						elif metric_ not in ['initial_centroids', 'final_centroids', 'final_centroids_lst', 'n_clusters',
 						               'n_clusters_pred', 'labels_true', 'labels_pred']:
 							mean_, std_ = results_avg_[split][metric_] #  We use the fixed seed for each model, so here only one score (i.e., mean is the real score, std is 0)
-							results_avg[split][metric_] = [mean_]
+							results_detail[split][metric_] = [mean_]
 						else:
-							results_avg[split][metric_] = copy.deepcopy(v_)
+							results_detail[split][metric_] = [copy.deepcopy(v_)]
 			else:
 				for split, vs in results_avg_.items():
 					for metric_, v_ in vs.items():
-						results_avg[split][metric_].append(results_avg_[split][metric_])
+						if metric_ == 'metric_names': continue
+						elif metric_ in ['final_centroids_lst']:
+							results_detail[split][metric_].extend(v_)
+						elif metric_ not in ['initial_centroids', 'final_centroids', 'n_clusters',
+						               'n_clusters_pred', 'labels_true', 'labels_pred']:
+							# print(metric_, results_avg_[split][metric_])
+							mean_, std_ = results_avg_[split][metric_]
+							results_detail[split][metric_].append(mean_)
+						else:
+							results_detail[split][metric_].append(v_)
 		except Exception as e:
 			traceback.print_exc()
 
-	for split, vs in results_avg.items():
+	# print(results_detail)
+
+	results_avg = {}
+	for split, vs in results_detail.items():
+		if split not in results_avg:
+			results_avg[split] = {}
 		for metric_, v_ in vs.items():
 			if metric_ not in ['metric_names', 'initial_centroids', 'final_centroids', 'final_centroids_lst', 'n_clusters',
 			                   'n_clusters_pred', 'labels_true', 'labels_pred']:
 				try:
-					tmp = results_avg[split][metric_]
+					tmp = results_detail[split][metric_]
+					# print(metric_, tmp)
 					results_avg[split][metric_] = (np.mean(tmp), np.std(tmp))
 				except Exception as e:
+					print(metric_, tmp)
+					traceback.print_exc()
 					results_avg[split][metric_] = (e, )
+			else:
+				results_avg[split][metric_] = v_ 	
 
-	return results_avg
+	# print(results_avg, results_detail)
+	return results_avg, results_detail
 
 
 def parser_history_topk(args):
@@ -191,9 +214,9 @@ def parser_history_topk(args):
 					if i not in keep_indices: continue
 					if history[seed]['scores'][split]['n_clusters'] != history[seed]['scores'][split]['n_clusters_pred']:
 						continue
-					initial_centroids += [[f'{v:.5f}' for v in vs] for vs in history[seed]['initial_centroids']]
-					final_centroids += [[f'{v:.5f}' for v in vs] for vs in history[seed]['final_centroids']]
-					final_centroids_lst += ['(' + ', '.join(f'{v:.5f}' for v in vs) + ')' for vs in
+					initial_centroids += [[f'{v:.{n_precision}f}' for v in vs] for vs in history[seed]['initial_centroids']]
+					final_centroids += [[f'{v:.{n_precision}f}' for v in vs] for vs in history[seed]['final_centroids']]
+					final_centroids_lst += ['(' + ', '.join(f'{v:.{n_precision}f}' for v in vs) + ')' for vs in
 					                        history[seed]['final_centroids']]
 					training_iterations.append(history[seed]['training_iterations'])
 					durations.append(history[seed]['duration'])
@@ -284,9 +307,9 @@ def parser_history2(args):
 				final_centroids_lst = []
 				durations = []
 				for seed in SEEDS:
-					initial_centroids+=[[ f'{v:.5f}' for v in vs ] for vs in history[seed]['initial_centroids']]
-					final_centroids += [[ f'{v:.5f}' for v in vs ] for vs in history[seed]['final_centroids']]
-					final_centroids_lst += ['(' + ', '.join(f'{v:.5f}' for v in vs) + ')' for vs in history[seed]['final_centroids']]
+					initial_centroids+=[[ f'{v:.{n_precision}f}' for v in vs ] for vs in history[seed]['initial_centroids']]
+					final_centroids += [[ f'{v:.{n_precision}f}' for v in vs ] for vs in history[seed]['final_centroids']]
+					final_centroids_lst += ['(' + ', '.join(f'{v:.{n_precision}f}' for v in vs) + ')' for vs in history[seed]['final_centroids']]
 					training_iterations.append(history[seed]['training_iterations'])
 					durations.append(history[seed]['duration'])
 				results_detail[split] = {'metric_names': metric_names,
@@ -311,7 +334,7 @@ def parser_history2(args):
 	return results_detail
 
 
-def save2xls(workbook, worksheet, column_idx, args, results_avg):
+def save2xls(workbook, worksheet, column_idx, args, results_avg, metric_names):
 	dataset_name = args['DATASET']['name']
 	dataset_detail = args['DATASET']['detail']
 	# algorithm_name = args['ALGORITHM']['name']
@@ -457,30 +480,50 @@ def save2xls(workbook, worksheet, column_idx, args, results_avg):
 	# 	data = '-'
 	try:
 		for split in args['SPLITS']:
-			metric_names = results_avg[split]['metric_names']
+			# metric_names = results_avg[split]['metric_names']
 			s = f'*{split}:\n'
-			if split == 'train':
-				Iterations = results_avg[split]['Iterations']
-				durations = results_avg[split]['durations']
-				s += f'\titerations: {Iterations[0]:.2f} +/- '\
-				     f'{Iterations[1]:.2f}\n'
-				s += f'\tdurations: {durations[0]:.2f} +/- ' \
-				     f'{durations[1]:.2f}\n'
-			else:
-				s += '\n'
+			# if split == 'train':
+			# 	Iterations = results_avg[split]['Iterations']
+			# 	durations = results_avg[split]['durations']
+			# 	s += f'\titerations: {Iterations[0]:.2f} +/- '\
+			# 	     f'{Iterations[1]:.2f}\n'
+			# 	s += f'\tdurations: {durations[0]:.2f} +/- ' \
+			# 	     f'{durations[1]:.2f}\n'
+			# else:
+			# 	s += '\n'
 			for metric_name in metric_names:
-				if metric_name in ['labels_pred', 'labels_true', 'n_clusters', 'n_clusters_pred']:
-					value = results_avg[split][metric_name]
-					s += f'\t{metric_name}: {value}\n'
-					continue
-				score_mean, score_std = results_avg[split][metric_name]
-				s += f'\t{metric_name}: {score_mean:.2f} +/- {score_std:.2f}\n'
 
+				if metric_name in ['n_clusters', 'n_clusters_pred']:
+					value = results_avg[split][metric_name]
+					s += f'\t{metric_name}({len(value)}):\n{value}\n'
+
+				elif metric_name in ['labels_pred', 'labels_true']:
+					value = results_avg[split][metric_name]
+					s += f'\t{metric_name}({len(value)}):\n'
+					s += '\n'.join([str(v) for v in value]) + '\n'
+					tmp_ = sum(value, [])
+					tmp_ = sum([[f'{k_}:{v_}' for k_, v_ in d_.items()] for d_ in tmp_], []) # flatten a nested list 
+					tmp_ = collections.Counter(tmp_)
+					tmp_ = sorted(tmp_.items(), key=lambda kv: kv[1], reverse=True)
+					# tmp_ = '\n'.join([f'{k_}, {v_}' for k_, v_ in tmp_])
+					s += f'\tdistribution:\n{tmp_}\n'
+
+				else:
+					score_mean, score_std = results_avg[split][metric_name]
+					s += f'\t{metric_name}: {score_mean:.2f} +/- {score_std:.2f}\n'
+
+			worksheet.set_row(row, 400)  # set row height to 100
+			worksheet.write(row, column_idx, s)
+			row += 1
+
+			s = ''
 			initial_centroids = results_avg[split]['initial_centroids']
 			final_centroids = results_avg[split]['final_centroids']
 			final_centroids_lst = results_avg[split]['final_centroids_lst']
-			s += f'initial_centroids:\n{initial_centroids}\n'
-			s += f'final_centroids:\n{final_centroids}\n'
+			s += f'initial_centroids:\n'
+			s += '\n'.join([str(v) for v in initial_centroids]) + '\n'
+			s += f'final_centroids:\n'
+			s += '\n'.join([str(v) for v in final_centroids]) + '\n'
 			# final centroids distribution
 			s += 'final centroids distribution: \n'
 			ss_ = sorted(collections.Counter(final_centroids_lst).items(), key=lambda kv: kv[1], reverse=True)
@@ -600,8 +643,9 @@ def save2csv2(csv_f, idx_alg, args, results_avg, metric_names):
 			for metric_name in metric_names:
 				try:
 					value = results_avg[split][metric_name]
+					n_ = len(value)
 					value = str(value).replace(',', '|')
-					s.append(f'{value}')
+					s.append(f'{n_}:{value}')
 				except Exception as e:
 					s.append(f'nan')
 			s = ','.join(s)
@@ -736,7 +780,7 @@ def main2():
 
 
 
-def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
+def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5, IS_PCA = False, IS_REMOVE_OUTLIERS = False):
 	# get default config.yaml
 	config_file = 'config.yaml'
 	args = config.load(config_file)
@@ -745,18 +789,21 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 	args['N_REPEATS'] = N_REPEATS
 	args['OVERWRITE'] = OVERWRITE
 	args['VERBOSE'] = VERBOSE
+	args['IS_PCA'] = IS_PCA
+	args['IS_REMOVE_OUTLIERS'] = IS_REMOVE_OUTLIERS
+	
 
 	tot_cnt = 0
 	# ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
 	# dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS'] # ['NBAIOT'] # '3GAUSSIANS', '10GAUSSIANS', 'NBAIOT',  'FEMNIST', 'SENT140'
 	dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK','GASSENSOR','SELFBACK', 'MNIST']  #
 	dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT','DRYBEAN', 'GASSENSOR','SELFBACK']  #
-	dataset_names = ['NBAIOT'] #
+	dataset_names = ['3GAUSSIANS', 'NBAIOT','MNIST'] #
 	py_names = [
 		'centralized_kmeans',
-		# 'federated_server_init_first',  # server first: min-max per each dimension
-		# 'federated_client_init_first',  # client initialization first : server average
-		# 'federated_greedy_kmeans',  # client initialization first: greedy: server average
+		'federated_server_init_first',  # server first: min-max per each dimension
+		'federated_client_init_first',  # client initialization first : server average
+		'federated_greedy_kmeans',  # client initialization first: greedy: server average
 		# # 'Our_greedy_center',
 		# 'Our_greedy_2K',
 		# 'Our_greedy_K_K',
@@ -768,11 +815,11 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 	for dataset in datasets:
 		algorithms = get_algorithms_config_lst(py_names, dataset['n_clusters'])
 		for idx_alg, algorithm in enumerate(algorithms):
-			print(f'*** {tot_cnt}th experiment ***:', dataset['name'], algorithm['py_name'])
+			print(f'\n*** {tot_cnt}th experiment ***:', dataset['name'], algorithm['py_name'])
 			Args_lst = []
 			for i_repeat in range(N_REPEATS):
 				seed_data = i_repeat * 10   # data seed
-				print('\n***', dataset['name'], i_repeat, seed_data)
+				# print('\n***', dataset['name'], i_repeat, seed_data)
 				args1 = copy.deepcopy(args)
 				SEED = args1['SEED'] # model seed
 				args1['SEED_DATA'] = seed_data
@@ -785,11 +832,14 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 				N_CLUSTERS = args1['N_CLUSTERS']
 				NORMALIZE_METHOD = args1['NORMALIZE_METHOD']
 				IS_PCA = args1['IS_PCA']
+				IS_REMOVE_OUTLIERS = args1['IS_REMOVE_OUTLIERS']
 				# if args1['DATASET']['name']  == 'MNIST' and IS_PCA:
 				# 	args1['DATASET']['detail'] = f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}',
 				# 	                                                 f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'SEED_{SEED}'])
 				# else:
-				args1['DATASET']['detail'] = os.path.join(f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}', f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}']), f'SEED_DATA_{seed_data}')
+				# args1['DATASET']['detail'] = os.path.join(f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}', f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}']), f'SEED_DATA_{seed_data}')
+				args1['DATASET']['detail'] = os.path.join(f'{SEPERTOR}'.join([args1['DATASET']['detail'], NORMALIZE_METHOD, f'PCA_{IS_PCA}', f'M_{N_CLIENTS}', f'K_{N_CLUSTERS}', f'REMOVE_OUTLIERS_{IS_REMOVE_OUTLIERS}']), f'SEED_DATA_{seed_data}')
+				
 				dataset_detail = args1['DATASET']['detail']
 
 				args2 = copy.deepcopy(args1)
@@ -840,26 +890,21 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 					traceback.print_exc()
 					break
 			try:
-				results_avg = parser_history(Args_lst)
-				save2xls(workbook, worksheet, idx_alg, args2, results_avg)
-				# # only save the top 2 results
-				# results_avg = parser_history_topk(args2)
-				save2csv(csv_f, idx_alg, args2, results_avg, metric_names=['ari', 'ami', 'fm', 'vm',
-				                                                           'Iterations', 'durations', 'davies_bouldin',
+				metric_names=['Iterations', 'durations',  'davies_bouldin',  'db_normalized',  'db_weighted',  'db_weighted2',
 				                                                           'silhouette', 'sil_weighted',
 				                                                           'ch', 'euclidean',
+				                                                           'ari', 'ami', 'fm', 'vm',
 				                                                           'n_clusters', 'n_clusters_pred',
 				                                                           'labels_pred', 'labels_true'
-				                                                           ])
+				                                                           ]
+
+				results_avg,results_detail = parser_history(Args_lst)
+				save2xls(workbook, worksheet, idx_alg, args2, results_avg, metric_names)
+				# # only save the top 2 results
+				# results_avg = parser_history_topk(args2)
+				save2csv(csv_f, idx_alg, args2, results_avg, metric_names)
 				# save results detail
-				results_detail = parser_history2(args2)
-				save2csv2(csv_f2, idx_alg, args2, results_detail, metric_names=['ari', 'ami', 'fm', 'vm',
-				                                                           'Iterations', 'durations', 'davies_bouldin',
-				                                                           'silhouette',  'sil_weighted',
-				                                                                'ch', 'euclidean',
-				                                                           'n_clusters', 'n_clusters_pred',
-				                                                            'labels_pred', 'labels_true'
-				                                                           ])
+				save2csv2(csv_f2, idx_alg, args2, results_detail, metric_names)
 			except Exception as e:
 				traceback.print_exc()
 			tot_cnt += 1
@@ -867,6 +912,7 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 		csv_f.close()
 		csv_f2.close()
 		workbook.close()
+		print('\n\n')
 		print(csv_file)
 
 	print(f'*** Total cases: {tot_cnt}')
@@ -874,4 +920,8 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5):
 
 if __name__ == '__main__':
 	# main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5)
-	main(N_REPEATS=100, OVERWRITE=True, IS_DEBUG=False, VERBOSE=2)
+	# main(N_REPEATS=5, OVERWRITE=True, IS_DEBUG=False, VERBOSE=2)
+
+	for IS_REMOVE_OUTLIERS in [False]:
+		for IS_PCA in [False, True]:
+			main(N_REPEATS=50, OVERWRITE=False, IS_DEBUG=False, VERBOSE=2, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)

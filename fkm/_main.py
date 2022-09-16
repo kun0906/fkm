@@ -17,6 +17,7 @@ from sklearn.preprocessing import StandardScaler
 from fkm import vis
 from fkm.utils.utils_func import dump, obtain_true_centroids
 from fkm.utils.utils_stats import evaluate2
+from fkm.utils.utils_func import timer
 # These options determine the way floating point numbers, arrays and
 # other NumPy objects are displayed.
 # np.set_printoptions(precision=3, suppress=True)
@@ -237,7 +238,7 @@ class NumpyEncoder(json.JSONEncoder):
 			return obj.tolist()
 		return json.JSONEncoder.default(self, obj)
 
-
+@timer
 def run_model(args):
 	"""
 
@@ -286,7 +287,7 @@ def run_model(args):
 	# data is fixed, however, the algorithm will have different initialization centroids with different seeds.
 	with open(args['data_file'], 'rb') as f:
 		raw_x, raw_y = pickle.load(f)
-
+	print(f'data_file: ', args['data_file'])
 	if VERBOSE >= 1:
 		# print raw_x and raw_y distribution
 		for split in SPLITS:

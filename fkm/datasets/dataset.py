@@ -41,6 +41,7 @@ def generate_dataset(args):
 	N_REPEATS = args['N_REPEATS']
 	N_CLUSTERS = args['N_CLUSTERS']
 	data_file = os.path.join(args['IN_DIR'], dataset_name,  f'{dataset_detail}.dat')
+	# print(data_file)
 	check_path(data_file)
 	args['data_file'] = data_file
 	if args['OVERWRITE'] and os.path.exists(data_file):

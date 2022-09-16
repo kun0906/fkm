@@ -24,6 +24,28 @@ from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
+def remove_outliers(X, y, ratio = 0.01):
+
+    n,d = X.shape 
+    n_outliers = int(n * ratio)
+    print(f'n_outliers: {n_outliers} when ratio: {ratio}')
+    if n_outliers < 1: 
+        return X, y 
+
+
+    med = np.median(X, axis=0)
+    dists = np.sum(np.square(X-med), axis=1)
+    dists = sorted([(i, v) for i, v in enumerate(dists)], key=lambda iv: iv[1], reverse=True)
+    mask_outliers = np.zeros((X.shape[0], ), dtype=bool)
+    # mask_outliers = [False if i < n_outliers else True for i, v in dists]
+    for i, v in dists: 
+        if i < n_outliers: 
+            mask_outliers[i] = True 
+        else:
+            mask_outliers[i] = False
+    X, y = X[~mask_outliers], y[~mask_outliers]
+
+    return X, y 
 
 
 def nbaiot_user_percent(args={}, random_state=42):
@@ -63,7 +85,7 @@ def nbaiot_user_percent(args={}, random_state=42):
 
     print(f'n_users: {n_users}, n_data_points: {n_data_points}, dim: {dim}')
 
-    is_show = True
+    is_show = args['IS_SHOW']
     if is_show:
         import matplotlib.pyplot as plt
         X_, y_ = sklearn.utils.resample(X, Y, replace=False, n_samples=2000, stratify=Y, random_state=random_state)
@@ -159,7 +181,7 @@ def nbaiot_user_percent_client11(args={}, random_state=42):
 
     print(f'n_users: {n_users}, n_data_points: {n_data_points}, dim: {dim}')
 
-    is_show = True
+    is_show = args['IS_SHOW']
     if is_show:
         X_, y_ = sklearn.utils.resample(X, Y, replace=False, n_samples=2000, stratify=Y, random_state=random_state)
         mp = {v: i/(len(set(y_))-1) * 100 for i, v in enumerate(sorted(set(y_)))} # corlormap range from 0 to 100.
@@ -279,9 +301,7 @@ def nbaiot_diff_sigma_n(args, random_state=42):
         return X1, y1, X2, y2, X3, y3
 
     X1, y1, X2, y2, X3, y3 = get_xy()
-    if 'Centralized' in args['ALGORITHM']['py_name']:   # for Centralized Kmeans, ratios should have no impact.
-        pass
-    elif 2* ratio <= 0 or 2* ratio >= 1:
+    if 2* ratio <= 0 or 2* ratio >= 1:
         pass
     else:
         # client 1: 90% cluster1, 10 % cluster2, 10 % cluster3
@@ -495,8 +515,9 @@ def nbaiot_C_2_diff_sigma_n(args, random_state=42):
         X = np.concatenate([X1, X2], axis=0)
         y = np.concatenate([y1, y2], axis=0)
 
-    print(X.shape, y.shape)
-
+    print('original shape: ', X.shape, y.shape)
+    is_remove_outliers = args['IS_REMOVE_OUTLIERS']
+    print(f'is_remove_outliers: {is_remove_outliers}')
     def get_xy(n=0):
 
         # client 1
@@ -506,6 +527,8 @@ def nbaiot_C_2_diff_sigma_n(args, random_state=42):
         X1 = X[indices]
         y1 = y[indices]
         X1, y1 = sklearn.utils.resample(X1, y1, replace=False, n_samples=n1, random_state=random_state)
+        if is_remove_outliers:
+            X1, y1 = remove_outliers(X1, y1)
         # y1 = np.asarray([0] * X1.shape[0])
 
         # client 2
@@ -515,6 +538,8 @@ def nbaiot_C_2_diff_sigma_n(args, random_state=42):
         X2 = X[indices]
         y2 = y[indices]
         X2, y2 = sklearn.utils.resample(X2, y2, replace=False, n_samples=n2, random_state=random_state)
+        if is_remove_outliers:
+            X2, y2 = remove_outliers(X2, y2)
         # y2 = np.asarray([1] * X2.shape[0])
 
         # # client 3
@@ -536,9 +561,8 @@ def nbaiot_C_2_diff_sigma_n(args, random_state=42):
         return X1, y1, X2, y2
 
     X1, y1, X2, y2 = get_xy()
-    if 'Centralized' in args['ALGORITHM']['py_name']:   # for Centralized Kmeans, ratios should have no impact.
-        pass
-    elif 2* ratio <= 0 or 2* ratio >= 1:
+    print('Sampled shape: ', X1.shape, X2.shape)
+    if 2* ratio <= 0 or 2* ratio >= 1:
         pass
     else:
         # client 1: 90% cluster1, 10 % cluster2, 10 % cluster3
@@ -569,7 +593,7 @@ def nbaiot_C_2_diff_sigma_n(args, random_state=42):
 
 
 
-    is_show = False
+    is_show = args['IS_SHOW']
     if is_show:
         # Plot init seeds along side sample data
         fig, ax = plt.subplots()

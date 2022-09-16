@@ -12,6 +12,10 @@
 *.dat
 *.png
 **/.DS_Store
+#.DS_Store
+/**/.DS_Store
+.DS_Store
+
 .gitignore
 
 !/start_fkm.sh

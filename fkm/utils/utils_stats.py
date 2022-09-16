@@ -166,6 +166,144 @@ def davies_bouldin_score_normalized(X, labels):
     return np.mean(scores)
 
 
+def davies_bouldin_score_weighted(X, labels):
+    """Compute the Davies-Bouldin score.
+        weighted DB score 
+        # (n1 * s1 + n2 * s2) / ((n1+n2) M12) 
+        # weighted average and consider about cluster sizes. 
+
+    The score is defined as the average similarity measure of each cluster with
+    its most similar cluster, where similarity is the ratio of within-cluster
+    distances to between-cluster distances. Thus, clusters which are farther
+    apart and less dispersed will result in a better score.
+
+    The minimum score is zero, with lower values indicating better clustering.
+
+    Read more in the :ref:`User Guide <davies-bouldin_index>`.
+
+    .. versionadded:: 0.20
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        A list of ``n_features``-dimensional data points. Each row corresponds
+        to a single data point.
+
+    labels : array-like of shape (n_samples,)
+        Predicted labels for each sample.
+
+    Returns
+    -------
+    score: float
+        The resulting Davies-Bouldin score.
+    """
+    (X, labels) = check_X_y(X, labels)
+    le = LabelEncoder()
+    labels = le.fit_transform(labels)
+    (n_samples, _) = X.shape
+    n_labels = len(le.classes_)
+    check_number_of_labels(n_labels, n_samples)
+    intra_dists = np.zeros(n_labels)
+    centroids = np.zeros((n_labels, len(X[0])))
+    centroid_sizes = np.zeros((n_labels, ))
+    for k in range(n_labels):
+        cluster_k = _safe_indexing(X, labels == k)
+        centroid_sizes[k] = cluster_k.shape[0]
+        centroid = np.mean(cluster_k, axis=0)
+        centroids[k] = centroid
+        intra_dists[k] = np.sum(pairwise_distances(cluster_k, [centroid]))  # i.e., n1 * s1
+
+    centroid_distances = np.zeros((n_labels, n_labels))
+    for k in range(n_labels):
+        for k2 in range(k+1, n_labels):
+            centroid_distances[k][k2] = np.sqrt(np.sum(np.square(centroids[k]-centroids[k2]))) * (centroid_sizes[k] + centroid_sizes[k2])
+            centroid_distances[k2][k] = centroid_distances[k][k2]
+
+    # centroid_distances = pairwise_distances(centroids)
+    if np.allclose(intra_dists, 0) or np.allclose(centroid_distances, 0):
+        return 0
+
+    centroid_distances[centroid_distances == 0] = np.inf
+    combined_intra_dists = intra_dists[:, None] + intra_dists  # n1 * s1 + n2 * s2 
+    # print(combined_intra_dists)
+    # print(centroid_distances)
+    scores = np.max(combined_intra_dists / centroid_distances,axis=1) # (n1 * s1 + n2 * s2) / ((n1+n2) M12) # weighted average and consider about cluster sizes. 
+
+    return np.mean(scores)
+
+
+def _euclidean(X, C):
+    return np.sqrt(np.sum(np.square(X-C), axis=1))
+
+def davies_bouldin_score_weighted2(X, labels, eps = 1e-5):
+    """Compute the Davies-Bouldin score.
+        weighted DB score 
+        # 1/ ((s12 - (n1*s1 + n2*s2))/(n1+n2)) + 1 / M12 
+        # weighted average and consider about cluster sizes. 
+        
+    The score is defined as the average similarity measure of each cluster with
+    its most similar cluster, where similarity is the ratio of within-cluster
+    distances to between-cluster distances. Thus, clusters which are farther
+    apart and less dispersed will result in a better score.
+
+    The minimum score is zero, with lower values indicating better clustering.
+
+    Read more in the :ref:`User Guide <davies-bouldin_index>`.
+
+    .. versionadded:: 0.20
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        A list of ``n_features``-dimensional data points. Each row corresponds
+        to a single data point.
+
+    labels : array-like of shape (n_samples,)
+        Predicted labels for each sample.
+
+    Returns
+    -------
+    score: float
+        The resulting Davies-Bouldin score.
+    """
+
+    (X, labels) = check_X_y(X, labels)
+    le = LabelEncoder()
+    labels = le.fit_transform(labels)
+    (n_samples, _) = X.shape
+    n_labels = len(le.classes_)
+    check_number_of_labels(n_labels, n_samples)
+    
+    centroid_distances = np.zeros((n_labels, n_labels))
+    for k in range(n_labels):
+        cluster_k = _safe_indexing(X, labels == k)
+        n_k = cluster_k.shape[0]
+        centroid_k = np.mean(cluster_k, axis=0)
+        s_k = np.sum(_euclidean(cluster_k, centroid_k))  # euclidean distance 
+
+        for k2 in range(k+1, n_labels):
+            cluster_k2 = _safe_indexing(X, labels == k2)
+            n_k2 = cluster_k2.shape[0]
+            centroid_k2 = np.mean(cluster_k2, axis=0)   
+            s_k2 = np.sum(_euclidean(cluster_k2, centroid_k2)) # euclidean distance
+
+            m_k_k2 = np.sum(_euclidean(centroid_k.reshape((-1, 1)), centroid_k2.reshape((-1, 1))))  # * (n_k + n_k2)
+
+            X_ = np.concatenate([cluster_k, cluster_k2], axis=0)
+            s_k_k2 = np.sum(_euclidean(X_, np.mean(X_, axis=0)))    # # np.median(X_)
+            centroid_distances[k][k2] = 1 / ((s_k_k2 - (s_k + s_k2))/(n_k+n_k2) + eps)  + 1 / (m_k_k2) 
+
+            centroid_distances[k2][k] = centroid_distances[k][k2]
+
+    # centroid_distances = pairwise_distances(centroids)
+    if np.allclose(centroid_distances, 0):
+        return 0
+
+    centroid_distances[centroid_distances == 0] = 0
+    scores = np.max(centroid_distances,axis=1) # (n1 * s1 + n2 * s2) / ((n1+n2) M12) # weighted average and consider about cluster sizes. 
+
+    return np.mean(scores)
+
 @timer
 def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verbose=False):
     scores = {}
@@ -255,10 +393,15 @@ def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verb
             # db = davies_bouldin(x[split], labels, centroids, verbose)
             db = metrics.davies_bouldin_score(x[split], labels_pred)
             db_normalized = davies_bouldin_score_normalized(x[split], labels_pred)
+            db_weighted = davies_bouldin_score_weighted(x[split], labels_pred)
+            db_weighted2 = davies_bouldin_score_weighted2(x[split], labels_pred)
             # print(f'db: {db}, db2: {db2}')
         except Exception as e:
             db = f'Error: {e}'
             db_normalized = f'Error: {e}'
+            db_weighted = f'Error: {e}'
+            db_weighted2 = f'Error: {e}'
+            traceback.print_exc()
 
         try:
             sil = metrics.silhouette_score(x[split], labels_pred)
@@ -289,6 +432,8 @@ def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verb
         score = {
             'davies_bouldin': db,
             'db_normalized': db_normalized,
+            'db_weighted': db_weighted, 
+            'db_weighted2': db_weighted2, 
             'silhouette': sil,
             'sil_weighted': sil_weighted,
             'ch': ch,

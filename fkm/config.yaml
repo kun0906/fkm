@@ -12,9 +12,10 @@ SHOW_TITLE: True
 SEPERTOR: '|'
 OVERWRITE: True
 
-N_REPEATS: 2
+N_REPEATS: 50
 NORMALIZE_METHOD: 'std'   # std (default), min-max, None
-IS_PCA: True              # if True, NORMALIZE_METHOD cannot be "None"
+IS_PCA: False              # if True, NORMALIZE_METHOD cannot be "None"
+IS_REMOVE_OUTLIERS: False   # if True, we will remove some noises before fitting the  model.
 N_CLIENTS: 2
 N_CLUSTERS: 2
 IS_FEDERATED: False

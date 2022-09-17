@@ -40,7 +40,7 @@ def selfback_diff_sigma_n(args, random_state=42):
 		out_file = 'Xy_PCA.data'
 	else:
 		out_file = 'Xy.dat'
-	out_file = os.path.join(in_dir, out_file)
+	out_file = os.path.join(os.path.dirname(in_dir), out_file)
 
 	if random_state == 0: # i_repeat * 10 = 0:
 		if os.path.exists(out_file):
@@ -90,7 +90,8 @@ def selfback_diff_sigma_n(args, random_state=42):
 			if '.DS_Store' in file: continue
 			label = file.split('_')[1]
 			file = os.path.join(in_dir, file)
-			df = pd.read_csv(file)
+			# print(file, flush=True)
+			df = pd.read_csv(file, engine='python')
 			X_ = df.values
 			y_ = [label] * X_.shape[0]
 			X.extend(X_)
@@ -102,7 +103,7 @@ def selfback_diff_sigma_n(args, random_state=42):
 	print(X.shape, y.shape)
 
 
-	def get_xy():
+	def get_xy(n1):
 		clients_train_x = []
 		clients_train_y = []
 		clients_test_x = []
@@ -112,11 +113,13 @@ def selfback_diff_sigma_n(args, random_state=42):
 		idx_label = 0
 		for y_i in sorted(set(y)):
 			indices = np.where(y == y_i)
-			if X.shape[0] < 5000: continue
+			# if X.shape[0] < 5000: continue
 			X_ = X[indices]
 			# y_ = y[indices]
 			y_ = np.ones((X_.shape[0],)) * idx_label
-			X_train, X_, y_train, y_ = train_test_split(X_, y_, train_size=n1, shuffle=True,
+			# if n1 == 0:
+			# 	# n_train = X_.shape[0]
+			X_train, X_, y_train, y_ = train_test_split(X_, y_, train_size= min(n1, 10000), shuffle=True,
 			                                                    random_state=random_state)  # train set = 1-ratio
 
 			clients_train_x.append(np.asarray(X_train))  # each client has one user's data
@@ -132,7 +135,7 @@ def selfback_diff_sigma_n(args, random_state=42):
 
 		return clients_train_x, clients_train_y, clients_test_x, clients_test_y
 
-	clients_train_x, clients_train_y, clients_test_x, clients_test_y = get_xy()
+	clients_train_x, clients_train_y, clients_test_x, clients_test_y = get_xy(n1)
 
 	x = {'train': clients_train_x,
 	     'test': clients_test_x}

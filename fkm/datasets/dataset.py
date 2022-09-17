@@ -40,7 +40,9 @@ def generate_dataset(args):
 	N_CLIENTS = args['N_CLIENTS']
 	N_REPEATS = args['N_REPEATS']
 	N_CLUSTERS = args['N_CLUSTERS']
-	data_file = os.path.join(args['IN_DIR'], dataset_name,  f'{dataset_detail}.dat')
+	# data_file = os.path.join(args['IN_DIR'], dataset_name,  f'{dataset_detail}.dat')
+	#  for different algorithms, please generate its own dataset for safe, even it's very slow.
+	data_file = os.path.join(args['OUT_DIR'],  f'SEED_DATA_{SEED_DATA}.dat')
 	# print(data_file)
 	check_path(data_file)
 	args['data_file'] = data_file

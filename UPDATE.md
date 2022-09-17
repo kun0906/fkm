@@ -1,12 +1,41 @@
-V0.2.3: Add different ratios for 3Gaussians and NBAIOT
+V0.2.3-5.1: Print each client data distribution for debugging. 
+
+
+V0.2.3-4: Modify the way to sample the data for each client and change sample_fraction to 1.0. 
+
+1. Modify the way to sample the data for all four datasets (only train without test) 
+2. Add ratio for MNIST.
+3. Change sample_fraction = 1 from 0.5. 
+
+
+V0.2.3-3: Reduce the evaluation metrics for saving time
+
+1. Reduce the evaluation metrics for saving time, especifically for silhouette plot and add plot.close() 
+2. Add centralized_minibatch_kmeans.py (not finished yet)
+
+
+
+V0.2.3-2: Add VGG_16 for MNIST and address the generated data effected by ratios and train_test_spilt.
+
+1. Centralized kmeans should not be effected by ratios
+2. Modify the ways to obtain test set, which could be an issue for the dataset caused by train_test_spilt
+   E.g., train_x, test_x, train_y, test_y = train_test_split(x, y, test_size=2, shuffle=True, stratify=y,
+                                                            random_state=random_state) 
+        where one class is 503 data points, and another one is 505; however, we expect both is 504.
+3. Add vgg_16 for MNIST and reduce the dimension for 28*28 to 100 
+4. Update main_all.py for MNIST 
+
+
+
+V0.2.3-1: Add different ratios for 3Gaussians and NBAIOT
 
 1. Delete "if 'Centralized' in params['p2']:  # for Centralized Kmeans, ratios should have no impact."
-	if 'Centralized' in params['p2']:  # for Centralized Kmeans, ratios should have no impact.
+    if 'Centralized' in params['p2']:  # for Centralized Kmeans, ratios should have no impact.
         pass
     elif 2 * ratio <= 0 or 2 * ratio >= 1:
         pass
     else:
-
+2. Add the setting for ['DRYBEAN', 'SELFBACK', 'GASSENSOR', 'MNIST'] and fix some issues in the setting. 
 
 
 V0.2.2: add IS_PCA and IS_REMOVE_OUTLIERS

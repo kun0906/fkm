@@ -225,7 +225,7 @@ class KMeansFederated(KMeans):
 		self.n_clients = len(X)
 		self.dim = X[0].shape[1]
 		if self.n_clients > 3:
-			if 0 < self.sample_fraction < 1:
+			if 0 < self.sample_fraction <= 1:
 				n_clients_per_round = max(1, int(self.sample_fraction * self.n_clients))
 			else:
 				print(f'Error: {self.sample_fraction}')

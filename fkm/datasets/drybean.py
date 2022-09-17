@@ -33,7 +33,7 @@ def drybean_diff_sigma_n(args, random_state=42):
 	# tmp = p1_0_c1[1].split('_')
 	# sigma1_0, sigma1_1 = float(tmp[1]), float(tmp[2])
 
-	def get_xy(in_dir='datasets/DRYBEAN/DryBeanDataset'):
+	def get_xy(in_dir='datasets/DRYBEAN/DryBeanDataset', n1=100):
 		clients_train_x = []
 		clients_train_y = []
 		clients_test_x = []
@@ -44,9 +44,11 @@ def drybean_diff_sigma_n(args, random_state=42):
 		df = pd.read_excel(file)
 		for y in sorted(set(df.Class)):
 			X_ = df[df.Class == y].iloc[:, :-1].values
-			if X_.shape[0] < 1100: continue
+			# if X_.shape[0] < 1100: continue
 			y_= np.ones((X_.shape[0],)) * idx_label
-			X_train, X_, y_train, y_ = train_test_split(X_, y_, train_size=n1, shuffle=True,
+			if n1 == 0:
+				n_train = X_.shape[0]-3
+			X_train, X_, y_train, y_ = train_test_split(X_, y_, train_size=n_train, shuffle=True,
 			                                                    random_state=random_state)  # train set = 1-ratio
 
 			clients_train_x.append(np.asarray(X_train))  # each client has one user's data
@@ -62,7 +64,7 @@ def drybean_diff_sigma_n(args, random_state=42):
 
 		return clients_train_x, clients_train_y, clients_test_x, clients_test_y
 
-	clients_train_x, clients_train_y, clients_test_x, clients_test_y = get_xy()
+	clients_train_x, clients_train_y, clients_test_x, clients_test_y = get_xy(n1=n1)
 
 	x = {'train': clients_train_x,
 	     'test': clients_test_x}

@@ -1,43 +1,66 @@
-### A Python project for comparing the proposed greedy centroid initialization with other initialization methods of federated K-means, which includes a centralized/traditional K-means (CKM) and four federated K-means (FKM).    
+## Federated K-Means Clustering Algorithm
 
-## Environment requirement
-  - Conda 4.10.3 # Conda -V
-  - Python 3.9.7 # Python3 -V
-  - Pip3 21.2.4 # Pip3 -V
-`
-## Installation instruction
-  - pip3 install -r requirements.txt
-  
-## Source code:
-- fkm 
+**A Python project for comparing the proposed greedy centroid initialization with other initialization methods of federated K-means, which includes a centralized/traditional K-means (CKM) and four federated K-means (FKM).**
+
+## Table of Contents
+
+* [Environment requirement](#Environment)
+* [Installation](#Installation)
+* [Usage](#Usage)
+* [Project structure](#Project)
+* [Dataset](#Dataset)
+* [Contact](#contact)
+
+<!-- * [License](#license) -->
+
+## Environment requirement <a name="Environment"></a>
+
+- Conda 4.10.3 # Conda -V
+- Python 3.9.7 # Python3 -V
+- Pip3 21.2.4 # Pip3 -V
+
+## Installation  <a name="Installation"></a>
+  `$pip3 install -r requirements.txt`
+
+## Project structure <a name="Project"></a>
+
+- docs
+- fkm
   - datasets
-  - clustering
+  - cluster
   - utils
-  - results
+  - vis
+  - out
+- requirement.txt
+- README.md
+- UPDATE.md
 
 ## Dataset:
+
 - FEMINIST: _downloaded from 'LEAF: https://leaf.cmu.edu/'_
-- GAUSSIAN2: _simulated 2 clusters from 2 Gaussian distributions._
 - GAUSSIAN3: _simulated 3 clusters from 3 Gaussian distributions._
-- GAUSSIAN5: _simulated 5 clusters from 5 Gaussian distributions._
+- GAUSSIAN10: _simulated 10 clusters from 10 Gaussian distributions._
+- MNIST: _handwritten datasets: https://yann.lecun.com/exdb/mnist/ or https://web.archive.org/web/20160828233817/http://yann.lecun.com/exdb/mnist/index.html
+- NBAIOT: _IoT dataset: https://archive.ics.uci.edu/ml/datasets/detection_of_IoT_botnet_attacks_N_BaIoT
 
-## Execution
-  ```shell
-  cd fkm/fkm/
-  PYTHONPATH='..' python3 centralized_kmeans.py
-  PYTHONPATH='..' python3 federated_server_init_first.py
-  PYTHONPATH='..' python3 federated_client_init_first.py
-  PYTHONPATH='..' python3 federated_greedy_kmeans.py  
-#  PYTHONPATH='..' python3 Our_greedy_center.py  
-#  PYTHONPATH='..' python3 Our_greedy_2K.py  
-#  PYTHONPATH='..' python3 Our_greedy_K_K.py  
-#  PYTHONPATH='..' python3 Our_greedy_concat_Ks.py
-#  PYTHONPATH='..' python3 Our_weighted_kmeans_initialization.py
-  ```
+## Usage
 
+```shell
+$cd fkm/fkm/
+$PYTHONPATH='..' python3 main_all.py
+```
 
+## Update
 
-[//]: # ()
-[//]: # (# Author: Kun)
+- All the update details can be seen in UPDATE.md
 
-[//]: # (# Email: kun.bj@outlook.com)
+## Contact
+
+- Email: kun.bj@outlook.com
+
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #

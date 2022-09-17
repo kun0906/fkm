@@ -105,3 +105,5 @@ def silhouette_plot(X, y_pred, centroids, out_file = 'silhouette.png', is_show =
     if is_show:
         plt.show()
 
+    plt.close()
+

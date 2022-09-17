@@ -2,6 +2,7 @@
 
 """
 # Email: Kun.bj@outlook.com
+import collections
 import copy
 import json
 import os
@@ -15,6 +16,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 from fkm import vis
+from fkm.cluster import centralized_minibatch_kmeans
 from fkm.utils.utils_func import dump, obtain_true_centroids
 from fkm.utils.utils_stats import evaluate2
 from fkm.utils.utils_func import timer
@@ -191,6 +193,7 @@ def normalize(raw_x, raw_y, raw_true_centroids, splits, params):
 
 		global_stdscaler = StandardScaler()  # we can get the same global_stdscaler using each client mean and std.
 		global_stdscaler.fit(x['train'])
+		# print(global_stdscaler.mean_, global_stdscaler.scale_)
 
 		for spl in splits:  # train and test
 			new_true_centroids[spl] = global_stdscaler.transform(new_true_centroids[spl])
@@ -288,6 +291,14 @@ def run_model(args):
 	with open(args['data_file'], 'rb') as f:
 		raw_x, raw_y = pickle.load(f)
 	print(f'data_file: ', args['data_file'])
+	for split in SPLITS:
+		X_ = raw_x[split]
+		y_ = raw_y[split]
+		print(len(X_), N_CLIENTS)
+		for i_c in range(N_CLIENTS):
+			print(f'{split}:{i_c}-th client raw data info, where mean: {np.mean(X_[i_c], axis=0)}, '
+			      f'std: {np.std(X_[i_c], axis=0)}, and y: {collections.Counter(y_[i_c])}')
+
 	if VERBOSE >= 1:
 		# print raw_x and raw_y distribution
 		for split in SPLITS:
@@ -333,7 +344,8 @@ def run_model(args):
 		'centralized_kmeans': centralized_kmeans.KMeans,
 		'federated_server_init_first': federated_server_init_first.KMeansFederated,
 		'federated_client_init_first': federated_client_init_first.KMeansFederated,
-		'federated_greedy_kmeans': federated_greedy_kmeans.KMeansFederated
+		'federated_greedy_kmeans': federated_greedy_kmeans.KMeansFederated,
+		'centralized_minibatch_kmeans': centralized_minibatch_kmeans.KMeans,
 	}
 	for idx_seed, seed in enumerate(SEEDS):  # repetitions:  to obtain average and std score.
 
@@ -355,7 +367,7 @@ def run_model(args):
 		kmeans = KMEANS2PY[args['ALGORITHM']['py_name']](
 			n_clusters=N_CLUSTERS,
 			# batch_size=BATCH_SIZE,
-			sample_fraction=0.5,
+			sample_fraction=1.0,
 			epochs_per_round=args['CLIENT_EPOCHS'],
 			max_iter=args['ROUNDS'],
 			server_init_method=server_init_method,

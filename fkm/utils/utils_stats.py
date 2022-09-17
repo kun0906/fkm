@@ -305,7 +305,7 @@ def davies_bouldin_score_weighted2(X, labels, eps = 1e-5):
     return np.mean(scores)
 
 @timer
-def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verbose=False):
+def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verbose=False, is_saving_time=True):
     scores = {}
     centroids = kmeans.centroids
     x = copy.deepcopy(x)
@@ -365,8 +365,12 @@ def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verb
             ami = f'Error: {e}'
 
         try:
-            # adjust mutual information
-            fm = metrics.fowlkes_mallows_score(labels_true, labels_pred)
+            # fm
+            if is_saving_time:
+                fm = 0
+            else:
+                fm = metrics.fowlkes_mallows_score(labels_true, labels_pred)
+
         except Exception as e:
             msg = f'Error: {e}'
             warnings.warn(msg)
@@ -375,7 +379,10 @@ def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verb
 
         try:
             # Compute the Calinski and Harabasz score.
-            vm = metrics.v_measure_score(labels_true, labels_pred)
+            if is_saving_time:
+                vm = 0
+            else:
+                vm = metrics.v_measure_score(labels_true, labels_pred)
         except Exception as e:
             msg = f'Error: {e}'
             warnings.warn(msg)
@@ -383,7 +390,10 @@ def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verb
 
         try:
             # Compute the Calinski and Harabasz score.
-            ch = metrics.calinski_harabasz_score(x[split], labels_pred)  # np.sqrt(recall * precision)
+            if is_saving_time:
+                ch = 0
+            else:
+                ch = metrics.calinski_harabasz_score(x[split], labels_pred)  # np.sqrt(recall * precision)
         except Exception as e:
             msg = f'Error: {e}'
             warnings.warn(msg)
@@ -392,9 +402,14 @@ def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verb
         try:
             # db = davies_bouldin(x[split], labels, centroids, verbose)
             db = metrics.davies_bouldin_score(x[split], labels_pred)
-            db_normalized = davies_bouldin_score_normalized(x[split], labels_pred)
-            db_weighted = davies_bouldin_score_weighted(x[split], labels_pred)
-            db_weighted2 = davies_bouldin_score_weighted2(x[split], labels_pred)
+            # for saving time
+            if is_saving_time:
+                db_normalized = db_weighted = db_weighted2 = 0
+            else:
+                # for testing new customized metrics:
+                db_normalized = davies_bouldin_score_normalized(x[split], labels_pred)
+                db_weighted = davies_bouldin_score_weighted(x[split], labels_pred)
+                db_weighted2 = davies_bouldin_score_weighted2(x[split], labels_pred)
             # print(f'db: {db}, db2: {db2}')
         except Exception as e:
             db = f'Error: {e}'
@@ -405,18 +420,23 @@ def evaluate2(kmeans, x, y=None, splits=['train', 'test'], federated=False, verb
 
         try:
             sil = metrics.silhouette_score(x[split], labels_pred)
-            sil_weighted_ = []
-            # le = LabelEncoder()
-            # labels = le.fit_transform(y_pred)
-            # n_samples = len(labels)
-            sample_silhouette_values = metrics.silhouette_samples(x[split], labels_pred)
-            for i in sorted(np.unique(labels_pred)):
-                ith_cluster_silhouette_values = sample_silhouette_values[labels_pred == i]
-                sil_weighted_.append((ith_cluster_silhouette_values, ith_cluster_silhouette_values.shape[0]))
-            sil_weighted = np.mean([np.sum(v_)/n_ for v_, n_ in sil_weighted_])
+            if is_saving_time:
+                # for saving time
+                sil_weighted = 0
+            else:
+                sil_weighted_ = []
+                # le = LabelEncoder()
+                # labels = le.fit_transform(y_pred)
+                # n_samples = len(labels)
+                sample_silhouette_values = metrics.silhouette_samples(x[split], labels_pred)
+                for i in sorted(np.unique(labels_pred)):
+                    ith_cluster_silhouette_values = sample_silhouette_values[labels_pred == i]
+                    sil_weighted_.append((ith_cluster_silhouette_values, ith_cluster_silhouette_values.shape[0]))
+                sil_weighted = np.mean([np.sum(v_)/n_ for v_, n_ in sil_weighted_])
 
             training_iterations = kmeans.training_iterations
-            if training_iterations % 5 == 0 or kmeans.is_train_finished:
+            # each one takes 2-5 mins. It will take too much time if you have many iterations (e.g., 2*100 = 200mins).
+            if training_iterations % 50 == 0 or kmeans.is_train_finished:
                 out_file = os.path.join(kmeans.params['OUT_DIR'], f'SEED_' + str(kmeans.params['SEED']), f'{training_iterations}.png')
                 silhouette_plot(x[split], labels_pred, centroids, out_file, is_show=kmeans.params['IS_SHOW'])
 

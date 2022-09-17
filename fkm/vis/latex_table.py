@@ -120,7 +120,7 @@ def save2csv(df, table_l2, py_name, case, column_idx, client_epochs):
 		data = '-'
 
 
-def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE=5, IS_PCA=False, IS_REMOVE_OUTLIERS=False):
+def main(N_REPEATS=1, dataset_name ='', OVERWRITE=True, IS_DEBUG=False, VERBOSE=5, IS_PCA=False, IS_REMOVE_OUTLIERS=False):
 	# get default config.yaml
 	config_file = 'config.yaml'
 	args = config.load(config_file)
@@ -133,14 +133,6 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE=5, IS_PCA=False, I
 	args['IS_REMOVE_OUTLIERS'] = IS_REMOVE_OUTLIERS
 
 	tot_cnt = 0
-	# ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
-	# dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS'] # ['NBAIOT'] # '3GAUSSIANS', '10GAUSSIANS', 'NBAIOT',  'FEMNIST', 'SENT140'
-	dataset_names = ['NBAIOT', '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK',
-	                 'GASSENSOR', 'SELFBACK', 'MNIST']  #
-	dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT', 'DRYBEAN', 'GASSENSOR', 'SELFBACK']  #
-	dataset_names = ['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT', 'MNIST']  #
-	# dataset_names = ['MNIST',]
-	# dataset_names = ['SELFBACK', 'GASSENSOR', 'MNIST', 'DRYBEAN']  # 'NBAIOT', '3GAUSSIANS'
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
@@ -154,21 +146,22 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE=5, IS_PCA=False, I
 	]
 
 	sheet_names = set()
-	datasets = get_datasets_config_lst(dataset_names)
-	for dataset in datasets:
+	datasets = get_datasets_config_lst([dataset_name])
+	csv_files = []
+	for idx, dataset in enumerate(datasets):
 		args1_ = copy.deepcopy(args)
-		if dataset['name'] == '3GAUSSIANS' and IS_PCA == True: continue
-		if dataset['name'] == '10GAUSSIANS' and IS_PCA == True: continue
+		if dataset['name'] == '3GAUSSIANS' and IS_PCA == True: return
+		if dataset['name'] == '10GAUSSIANS' and IS_PCA == True: return
 		if dataset['name'] == 'MNIST':
 			if args1_['IS_PCA'] == True:
 				args1_['IS_PCA'] = 'CNN'
 			else:
-				continue
+				return
 		# 	continue # we already have the results
 		# # if dataset['name'] == 'MNIST' and args['IS_PCA'] == False:
 		# 	continue
 		if dataset['name'] == 'NBAIOT' and args1_['IS_PCA'] == True:
-			continue
+			return
 		# algorithms = get_algorithms_config_lst(py_names, dataset['n_clusters'])
 		# print('\n***', dataset['name'], i_repeat, seed_data)
 		args1 = copy.deepcopy(args1_)
@@ -217,39 +210,66 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE=5, IS_PCA=False, I
 			f'federated_greedy_kmeans|R_{N_REPEATS}|greedy|random|{TOLERANCE}|{NORMALIZE_METHOD}': 'Greedy-Random',
 			f'federated_greedy_kmeans|R_{N_REPEATS}|greedy|kmeans++|{TOLERANCE}|{NORMALIZE_METHOD}': 'Greedy-KM++',
 		}
-
 		csv_file = os.path.join(OUT_DIR, 'xlsx', args2['DATASET']['name'], f'{os.path.dirname(dataset_detail)}',
-		                         args2['ALGORITHM']['detail'] + '.csv')
+		                        args2['ALGORITHM']['detail'] + '-paper.csv')
+		csv_files.append(csv_file)
+	# print(csv_files)
 
-		try:
-			df = pd.read_csv(csv_file)
-			out_csv = os.path.join(OUT_DIR, 'xlsx', args2['DATASET']['name'], f'{os.path.dirname(dataset_detail)}',
-			                         args2['ALGORITHM']['detail'] + '-paper.csv')
-			out_csv2 = os.path.join(OUT_DIR, 'xlsx', args2['DATASET']['name'], f'{os.path.dirname(dataset_detail)}',
-			                       args2['ALGORITHM']['detail'] + '-paper2.csv')
-			df = df.T
-			# df.iloc[0, :] = ['CKM-R', 'CKM++', 'Server-MinMax', 'Average-Random',
-			#                  'Average-KM++', 'Greedy-Random', 'Greedy-KM++']
-			lst = ['CKM-Random', 'CKM++', 'Server-MinMax', 'Average-Random',
-			                 'Average-KM++', 'Greedy-Random', 'Greedy-KM++']
-			for i in range(7):
-				df.iloc[0, i] = lst[i]
-			df.iloc[[0, 1, 10, 11], :].to_csv(out_csv, sep = ',')
-			# df.iloc[[0, 1, 10, 11], :].to_csv(out_csv2, sep=str('&'))
-			tmp = df.iloc[[0, 1, 10, 11], :]
-			with open(os.path.expanduser(out_csv2), 'w') as f:
-				np.savetxt(f, np.concatenate([tmp.index.to_numpy().reshape((-1, 1)), tmp.values], axis=1), delimiter=' & ', fmt='%s')
-		except Exception as e:
-			print(e)
+	all_csv_file = os.path.join(OUT_DIR, 'xlsx', args2['DATASET']['name'], f'{os.path.dirname(dataset_detail)}',
+	                        args2['ALGORITHM']['detail'] + '-paper-all.csv')
 
-		print(out_csv)
-	print(f'*** Total cases: {tot_cnt}')
+	with open(os.path.expanduser(all_csv_file), 'w') as f:
+		for i, csv_file in enumerate(csv_files):
+			if i == 0:
+				head = r"""
+\begin{tabular}{|l|l|g|l|l|G|G|} 
+\toprule
+Percent ($P$) &  Metrics  & Server-Random  & Average-Random & Average-KM++   & Greedy-Random  & Greedy-KM++    \\ 
+\hline\hline
+"""
+				f.write(head)
+			values = pd.read_csv(csv_file).iloc[:, [0, 3, 4, 5, 6, 7]].values
+			Ps = [0, 0.1, 0.3, 0.5]
+			for j in range(len(values)):
+				if j == 0: continue
+				if j == 1:
+					line = r"\multirow{3}{*}{$P$=" + f'{Ps[i]}' + "}" + ' & '
+				else:
+					line = '\t &'
+				line += ' & '.join([str(v).replace('+/-', '$\pm$') for v in values[j, :]] ) + r" \\" + '\n'
+				line = line.replace('Iterations', r"Iterations ($T$)")
+				line = line.replace('Euclidean', r"$\overline{WCSS}$")
+				f.write(line)
+			f.write(r"\hline\hline" + '\n')
+
+		bottom = r"""\bottomrule
+\end{tabular}
+"""
+		f.write(bottom)
+			# # values = np.genfromtxt(os.path.expanduser(csv_file), delimiter=',')
+			# print(csv_file)
+			# values = pd.read_csv(csv_file).iloc[:, [0, 3, 4, 5, 6, 7]].values
+			# np.savetxt(f, values, delimiter=' & ', fmt='%s')
+
+	print(all_csv_file)
+	print(f"Finished.\n")
+
 
 if __name__ == '__main__':
 	# tot_cnt = main()
 	# print()
 	# print(f'*** Total cases: {tot_cnt}')
-	for IS_REMOVE_OUTLIERS in [False]:
-		for IS_PCA in [False, True]:
-			main(N_REPEATS=50, OVERWRITE=False, IS_DEBUG=False, VERBOSE=2, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)
-
+	# ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
+	# dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS'] # ['NBAIOT'] # '3GAUSSIANS', '10GAUSSIANS', 'NBAIOT',  'FEMNIST', 'SENT140'
+	dataset_names = ['NBAIOT', '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK',
+	                 'GASSENSOR', 'SELFBACK', 'MNIST']  #
+	dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT', 'DRYBEAN', 'GASSENSOR', 'SELFBACK']  #
+	dataset_names = ['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT', 'MNIST']  #
+	# dataset_names = ['SELFBACK', 'GASSENSOR', 'MNIST', 'DRYBEAN']  # 'NBAIOT', '3GAUSSIANS'
+	for dataset_name in dataset_names:
+		for IS_REMOVE_OUTLIERS in [False]:
+			for IS_PCA in [False, True]:
+				try:
+					main(N_REPEATS=50, dataset_name = dataset_name, OVERWRITE=False, IS_DEBUG=False, VERBOSE=2, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)
+				except Exception as e:
+					traceback.print_exc()

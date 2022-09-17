@@ -189,14 +189,14 @@ def plot_P(ax, result_files, alg2abbrev, is_legend=False, y_name='Training Itera
 				msg = f'n_clusters == n_clusters_pred ? {flg}'
 				print(msg)
 				return msg
-			df_ = df_.iloc[:, 0:14]
+			df_ = df_.iloc[:, 0:15]
 			df_['p'] = [p] * df_.shape[0]
 		except Exception as e:
 			traceback.print_exc()
 			return
 		# percents += [p] * df_.shape[0]
 		df = pd.concat([df, df_], axis=0)
-	df.columns = ['Algorithm', 'Iterations', 'Durations', 'DB', 'db_normalized',	'db_weighted	db_weighted2',
+	df.columns = ['Algorithm', 'Iterations', 'Durations', 'DB', 'db_normalized',	'db_weighted',	'db_weighted2',
 	              'Silhouette', 'Sil_weighted',	'CH',	'Euclidean', 'ARI', 'AMI', 'FM', 'VM',
 	              # 'n_clusters', 'n_clusters_pred',
 	              'p']
@@ -524,14 +524,14 @@ def plot_real_case_P(in_dir, out_dir, alg2abbrev, csv_files):
 	args = csv_files[0]
 	n_repeats = args['N_REPEATS']
 	# plot for real data: varied n1 and fixed_p
-	for metrics in [['Iterations'],
-	                ['ARI', 'VM', 'Euclidean'],
-	                ['DB', 'Silhouette', 'AMI', ]]:
-		if 'Iterations' in metrics[0]:
-			fig, axes = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5, 3))  # (width, height)
-			axes = np.asarray(axes).reshape((1, 1))
-			fig_name = f'{dataset_name}_K_{n_clusters}_M_{n_clients}_R_{n_repeats}_fixed_n_diff_p_training_iterations'
-		elif 'ARI' in metrics[0]:
+	for metrics in [['Iterations', 'ARI', 'Euclidean'],
+	                # ['ARI', 'VM', 'Euclidean'],
+	                ['DB', 'Silhouette', 'AMI',]]:
+		# if 'Iterations' in metrics[0]:
+		# 	fig, axes = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5, 3))  # (width, height)
+		# 	axes = np.asarray(axes).reshape((1, 1))
+		# 	fig_name = f'{dataset_name}_K_{n_clusters}_M_{n_clients}_R_{n_repeats}_fixed_n_diff_p_training_iterations'
+		if 'ARI' in metrics[1]:
 			fig, axes = plt.subplots(1, 3, sharex=True, sharey=False, figsize=(15, 3))  # (width, height)
 			axes = np.asarray(axes).reshape((1, 3))
 			fig_name = f'{dataset_name}_K_{n_clusters}_M_{n_clients}_R_{n_repeats}_fixed_n_diff_p_ground_truth_metrics'
@@ -621,16 +621,15 @@ if __name__ == '__main__':
 	# in_dir = os.path.abspath('~/Downloads/xlsx')
 	IN_DIR = os.path.expanduser('~/Downloads/xlsx')
 	OUT_DIR = f'{IN_DIR}/latex_plot/'
-	N_REPEATS =  args['N_REPEATS']
+	N_REPEATS =  50 #   args['N_REPEATS']
 	TOLERANCE = args['TOLERANCE']
 	NORMALIZE_METHOD = args['NORMALIZE_METHOD']
 	IS_REMOVE_OUTLIERS = args['IS_REMOVE_OUTLIERS']
-	IS_PCA = args['IS_PCA']
 	args['OUT_DIR'] = OUT_DIR
 	SEPERTOR = args['SEPERTOR']
 
 	ALG2ABBREV = {
-		f'centralized_kmeans|R_{N_REPEATS}|random|None|{TOLERANCE}|{NORMALIZE_METHOD}': 'CKM-R',
+		f'centralized_kmeans|R_{N_REPEATS}|random|None|{TOLERANCE}|{NORMALIZE_METHOD}': 'CKM-Random',
 		f'centralized_kmeans|R_{N_REPEATS}|kmeans++|None|{TOLERANCE}|{NORMALIZE_METHOD}': 'CKM++',
 		# f'federated_server_init_first|R_{N_REPEATS}|random|None|{TOLERANCE}|{NORMALIZE_METHOD}': 'Server-Initialized',
 		f'federated_server_init_first|R_{N_REPEATS}|min_max|None|{TOLERANCE}|{NORMALIZE_METHOD}': 'Server-MinMax',
@@ -643,8 +642,9 @@ if __name__ == '__main__':
 	ratios = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.4999]
 
 	# dataset_name = 'FEMNIST'
-	# dataset_name = 'NBAIOT'
-	dataset_name = '3GAUSSIANS'
+	dataset_name = 'NBAIOT'
+	IS_PCA = True    # args['IS_PCA']
+	# dataset_name = '3GAUSSIANS'
 
 	if dataset_name == '3GAUSSIANS':
 		n_clusters = 3

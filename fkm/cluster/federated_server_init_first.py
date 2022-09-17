@@ -183,7 +183,7 @@ class KMeansFederated(KMeans):
         # clients_per_round = max(1, int(self.sample_fraction * self.n_clients))
         # print(f'clients_per_round: {clients_per_round}')
         if self.n_clients > 3:
-            if 0 < self.sample_fraction < 1:
+            if 0 < self.sample_fraction <= 1:
                 n_clients_per_round = max(1, int(self.sample_fraction * self.n_clients))
             else:
                 print(f'Error: {self.sample_fraction}')

@@ -54,7 +54,7 @@ def gassensor_diff_sigma_n(args, random_state=42):
 	# tmp = p1_0_c1[1].split('_')
 	# sigma1_0, sigma1_1 = float(tmp[1]), float(tmp[2])
 
-	def get_xy(in_dir='datasets/GASSENSOR/driftdataset'):
+	def get_xy(in_dir='datasets/GASSENSOR/driftdataset', n1=-1):
 		clients_train_x = []
 		clients_train_y = []
 		clients_test_x = []
@@ -70,7 +70,9 @@ def gassensor_diff_sigma_n(args, random_state=42):
 			indices = np.where(Y==y)
 			X_ = X[indices]
 			y_ = Y[indices]
-			X_train, X_test, y_train, y_test = train_test_split(X_, y_, train_size=n1, shuffle=True,
+			if n1 == 0:
+				n_train = X_.shape[0]-2
+			X_train, X_test, y_train, y_test = train_test_split(X_, y_, train_size=n_train, shuffle=True,
 			                                                    random_state=random_state)  # train set = 1-ratio
 
 			clients_train_x.append(np.asarray(X_train))  # each client has one user's data
@@ -81,7 +83,7 @@ def gassensor_diff_sigma_n(args, random_state=42):
 
 		return clients_train_x, clients_train_y, clients_test_x, clients_test_y
 
-	clients_train_x, clients_train_y, clients_test_x, clients_test_y = get_xy()
+	clients_train_x, clients_train_y, clients_test_x, clients_test_y = get_xy(n1=n1)
 
 	x = {'train': clients_train_x,
 	     'test': clients_test_x}

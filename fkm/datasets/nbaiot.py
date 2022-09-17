@@ -14,6 +14,8 @@ Data Set Information:
 https://archive.ics.uci.edu/ml/datasets/detection_of_IoT_botnet_attacks_N_BaIoT#
 
 """
+import collections
+import copy
 import os
 import pickle
 
@@ -520,6 +522,11 @@ def nbaiot_C_2_diff_sigma_n(args, random_state=42):
     print(f'is_remove_outliers: {is_remove_outliers}')
     def get_xy(n=0):
 
+        clients_train_x = []
+        clients_train_y = []
+        clients_test_x = []
+        clients_test_y = []
+
         # client 1
         # f = os.path.join(in_dir, 'benign_traffic.csv')
         # X1 = pd.read_csv(f).values
@@ -529,6 +536,8 @@ def nbaiot_C_2_diff_sigma_n(args, random_state=42):
         X1, y1 = sklearn.utils.resample(X1, y1, replace=False, n_samples=n1, random_state=random_state)
         if is_remove_outliers:
             X1, y1 = remove_outliers(X1, y1)
+        clients_train_x.append(X1)
+        clients_train_y.append(y1)
         # y1 = np.asarray([0] * X1.shape[0])
 
         # client 2
@@ -541,143 +550,43 @@ def nbaiot_C_2_diff_sigma_n(args, random_state=42):
         if is_remove_outliers:
             X2, y2 = remove_outliers(X2, y2)
         # y2 = np.asarray([1] * X2.shape[0])
+        clients_train_x.append(X2)
+        clients_train_y.append(y2)
 
-        # # client 3
-        # f = os.path.join(in_dir, os.path.join('gafgyt_attacks', "junk.csv"))
-        # X3 = pd.read_csv(f).values
-        # X3 = sklearn.utils.resample(X3, replace=False, n_samples=n3, random_state=random_state)
-        # y3 = np.asarray([1] * X2.shape[0])
+        if (ratio < 0) or (ratio > 1):
+            raise ValueError
+        elif ratio == 0:
+            pass
+        elif ('centralized' in args['ALGORITHM']['py_name']):
+            # there should have not effect for centralized kmeans for different ratios.
+            pass
+        else:
+            new_client_train_x = []
+            new_client_train_y = []
+            # P(ratio) = 0.1: draw 10% from the rest of all clusters.
+            # i.e., client 1 has 90% cluster 1, 10% of the rest of all clusters (10%/9 per each rest cluster)
+            n_classes = 2
+            for i in range(n_classes):
+                train_xi, test_xi, train_yi, test_yi = train_test_split(clients_train_x[i], clients_train_y[i],
+                                                                        test_size=ratio, shuffle=True,
+                                                                        random_state=random_state)  # train set = 1-ratio
+                for j in range(n_classes):
+                    if i == j: continue
+                    train_xj, test_xj, train_yj, test_yj = train_test_split(clients_train_x[j], clients_train_y[j],
+                                                                            test_size=ratio / (n_classes - 1),
+                                                                            shuffle=True,
+                                                                            random_state=random_state)  # train set = 1-ratio
+                    train_xi = np.concatenate([train_xi, test_xj], axis=0)
+                    train_yi = np.concatenate([train_yi, test_yj])
+                new_client_train_x.append(copy.deepcopy(train_xi))
+                new_client_train_y.append(copy.deepcopy(train_yi))
+                print(i, collections.Counter(train_yi))
+            clients_train_x, clients_train_y = new_client_train_x, new_client_train_y
+        # clients_test_x, clients_test_y = use the one when ratio = 0
 
-        # # mus = [0, -3]
-        # cov = np.asarray([[sigma, 0], [0, sigma]])
-        # X4 = r.multivariate_normal(mus, cov, size=n1)
-        # y4 = np.asarray([1] * n1)
+        return clients_train_x, clients_train_y, clients_test_x, clients_test_y
 
-        # X1 = np.concatenate([X1, X2], axis=0)
-        # y1 = np.concatenate([y1, y2], axis=0)
-        # X3 = np.concatenate([X3, X4], axis=0)
-        # y3 = np.concatenate([y3, y4], axis=0)
-
-        return X1, y1, X2, y2
-
-    X1, y1, X2, y2 = get_xy()
-    print('Sampled shape: ', X1.shape, X2.shape)
-    if 2* ratio <= 0 or 2* ratio >= 1:
-        pass
-    else:
-        # client 1: 90% cluster1, 10 % cluster2, 10 % cluster3
-        # client 2: 10% cluster1, 90 % cluster2, 10 % cluster3
-        # client 3: 10% cluster1, 10 % cluster2, 90 % cluster3
-        train_x1, test_x1, train_y1, test_y1 = train_test_split(X1, y1, test_size= ratio, shuffle=True,
-                                                      random_state=random_state)  # train set = 1-ratio
-        # test_x11, test_x12, test_y11, test_y12 = train_test_split(X1, y1, test_size=0.5, shuffle=True,
-        #                                                           random_state=random_state)  # each test set = 50% of rest data
-
-        train_x2, test_x2, train_y2, test_y2 = train_test_split(X2, y2, test_size= ratio, shuffle=True,
-                                                      random_state=random_state)
-        # test_x21, test_x22, test_y21, test_y22 = train_test_split(X2, y2, test_size=0.5, shuffle=True,
-        #                                                           random_state=random_state)
-
-        # train_x3, X3, train_y3, y3 = train_test_split(X3, y3, test_size=2* ratio, shuffle=True,
-        #                                               random_state=random_state)
-        # test_x31, test_x32, test_y31, test_y32 = train_test_split(X3, y3, test_size=0.5, shuffle=True,
-        #                                                           random_state=random_state)
-
-        X1 = np.concatenate([train_x1, test_x2], axis=0)
-        y1 = np.concatenate([train_y1, test_y2], axis=0) # be careful of this
-        # y1 = np.zeros((X1.shape[0],))
-
-        X2 = np.concatenate([test_x1, train_x2], axis=0)
-        y2 = np.concatenate([test_y1, train_y2], axis=0)
-        # y2 = np.ones((X2.shape[0],))
-
-
-
-    is_show = args['IS_SHOW']
-    if is_show:
-        # Plot init seeds along side sample data
-        fig, ax = plt.subplots()
-        # colors = ["#4EACC5", "#FF9C34", "#4E9A06", "m"]
-        colors = ["r", "g", "b", "m", 'black']
-        ax.scatter(X1[:, 0], X1[:, 1], c=colors[0], marker="x", s=10, alpha=0.3, label='$G_1$')
-        p = np.mean(X1, axis=0)
-        ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
-        offset = 0.3
-        # xytext = (p[0] + (offset / 2 if p[0] >= 0 else -offset), p[1] + (offset / 2 if p[1] >= 0 else -offset))
-        xytext = (p[0] - offset, p[1] - offset)
-        print(xytext)
-        ax.annotate(f'({p[0]:.1f}, {p[1]:.1f})', xy=(p[0], p[1]), xytext=xytext, fontsize=15, color='b',
-                    ha='center', va='center',  # textcoords='offset points',
-                    bbox=dict(facecolor='none', edgecolor='b', pad=1),
-                    arrowprops=dict(arrowstyle="->", color='b', shrinkA=1, lw=2,
-                                    connectionstyle="angle3, angleA=90,angleB=0"))
-        # angleA : starting angle of the path
-        # angleB : ending angle of the path
-
-        ax.scatter(X2[:, 0], X2[:, 1], c=colors[1], marker="o", s=10, alpha=0.3, label='$G_2$')
-        p = np.mean(X2, axis=0)
-        ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
-        offset = 0.3
-        # xytext = (p[0] + (offset / 2 if p[0] >= 0 else -offset), p[1] + (offset / 2 if p[1] >= 0 else -offset))
-        xytext = (p[0] + offset, p[1] - offset)
-        ax.annotate(f'({p[0]:.1f}, {p[1]:.1f})', xy=(p[0], p[1]), xytext=xytext, fontsize=15, color='r',
-                    ha='center', va='center',  # textcoords='offset points', va='bottom',
-                    bbox=dict(facecolor='none', edgecolor='red', pad=1),
-                    arrowprops=dict(arrowstyle="->", color='r', shrinkA=1, lw=2,
-                                    connectionstyle="angle3, angleA=90,angleB=0"))
-
-        ax.scatter(X3[:, 0], X3[:, 1], c=colors[2], marker="o", s=10, alpha=0.3, label='$G_3$')
-        p = np.mean(X3, axis=0)
-        ax.scatter(p[0], p[1], marker="x", s=150, linewidths=3, color="w", zorder=10)
-        offset = 0.3
-        # xytext = (p[0] + (offset / 2 if p[0] >= 0 else -offset), p[1] + (offset / 2 if p[1] >= 0 else -offset))
-        xytext = (p[0] + offset, p[1] - offset)
-        ax.annotate(f'({p[0]:.1f}, {p[1]:.1f})', xy=(p[0], p[1]), xytext=xytext, fontsize=15, color='r',
-                    ha='center', va='center',  # textcoords='offset points', va='bottom',
-                    bbox=dict(facecolor='none', edgecolor='red', pad=1),
-                    arrowprops=dict(arrowstyle="->", color='r', shrinkA=1, lw=2,
-                                    connectionstyle="angle3, angleA=90,angleB=0"))
-
-        ax.axvline(x=0, color='k', linestyle='--')
-        ax.axhline(y=0, color='k', linestyle='--')
-        ax.legend(loc='upper right', fontsize = 13)
-        if args['SHOW_TITLE']:
-            plt.title(dataset_detail.replace(':', '\n'))
-
-        # if 'xlim' in kwargs:
-        #     plt.xlim(kwargs['xlim'])
-        # else:
-        #     plt.xlim([-6, 6])
-        # if 'ylim' in kwargs:
-        #     plt.ylim(kwargs['ylim'])
-        # else:
-        #     plt.ylim([-6, 6])
-
-        fontsize = 13
-        plt.xticks(fontsize=fontsize)
-        plt.yticks(fontsize=fontsize)
-
-        plt.tight_layout()
-        # if not os.path.exists(params['OUT_DIR']):
-        #     os.makedirs(params['OUT_DIR'])
-        # f = os.path.join(args['OUT_DIR'], dataset_detail+'.png')
-        f = args['data_file'] + '.png'
-        print(f)
-        plt.savefig(f, dpi=600, bbox_inches='tight')
-        plt.show()
-
-    clients_train_x = []
-    clients_train_y = []
-    clients_test_x = []
-    clients_test_y = []
-    for i, (x, y) in enumerate([(X1, y1), (X2, y2)]):
-        train_x, test_x, train_y, test_y = train_test_split(x, y, test_size=2, shuffle=True,
-                                                            random_state=random_state)
-        clients_train_x.append(train_x)
-        clients_train_y.append(train_y)
-        clients_test_x.append(test_x)
-        clients_test_y.append(test_y)
-
+    clients_train_x, clients_train_y, clients_test_x, clients_test_y = get_xy()
     x = {'train': clients_train_x,
          'test': clients_test_x}
     labels = {'train': clients_train_y,

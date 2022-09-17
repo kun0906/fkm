@@ -20,7 +20,7 @@ from fkm import config
 from fkm.main_all import get_datasets_config_lst, get_algorithms_config_lst
 from fkm.utils.utils_func import load
 
-n_precision = 3
+n_precision = 10
 
 def _parser_history(args):
 	OUT_DIR = args['OUT_DIR']
@@ -68,10 +68,10 @@ def _parser_history(args):
 				                      'initial_centroids': initial_centroids,
 				                      'final_centroids': final_centroids,
 				                      'final_centroids_lst': final_centroids_lst}
-			# s += f'\titerations: {np.mean(training_iterations):.2f} +/- '\
-			#      f'{np.std(training_iterations):.2f}\n'
-			# s += f'\tdurations: {np.mean(durations):.2f} +/- ' \
-			#      f'{np.std(durations):.2f}\n'
+			# s += f'\titerations: {np.mean(training_iterations):{n_precision}f} +/- '\
+			#      f'{np.std(training_iterations):{n_precision}f}\n'
+			# s += f'\tdurations: {np.mean(durations):{n_precision}f} +/- ' \
+			#      f'{np.std(durations):{n_precision}f}\n'
 			else:
 				results_avg[split] = {'Iterations': ('', '')}
 			for metric_name in metric_names:
@@ -96,7 +96,7 @@ def _parser_history(args):
 					score_mean = np.nan
 					score_std = np.nan
 				results_avg[split][metric_name] = (score_mean, score_std)
-		# s += f'\t{metric_name}: {score_mean:.2f} +/- {score_std:.2f}\n'
+		# s += f'\t{metric_name}: {score_mean:{n_precision}f} +/- {score_std:{n_precision}f}\n'
 
 	# s += f'initial_centroids:\n{initial_centroids}\n'
 	# s += f'final_centroids:\n{final_centroids}\n'
@@ -104,7 +104,7 @@ def _parser_history(args):
 	# s += 'final centroids distribution: \n'
 	# ss_ = sorted(collections.Counter(final_centroids_lst).items(), key=lambda kv: kv[1], reverse=True)
 	# tot_centroids = len(final_centroids_lst)
-	# s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:.2f}% - ({cnt_}/{tot_centroids})' for
+	# s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:{n_precision}f}% - ({cnt_}/{tot_centroids})' for
 	#                  cen_, cnt_ in ss_)
 	except Exception as e:
 		warnings.warn(f'Parser Error: {e}')
@@ -226,10 +226,10 @@ def parser_history_topk(args):
 				                        'initial_centroids': initial_centroids,
 				                        'final_centroids': final_centroids,
 				                        'final_centroids_lst': final_centroids_lst}
-				# s += f'\titerations: {np.mean(training_iterations):.2f} +/- '\
-				#      f'{np.std(training_iterations):.2f}\n'
-				# s += f'\tdurations: {np.mean(durations):.2f} +/- ' \
-				#      f'{np.std(durations):.2f}\n'
+				# s += f'\titerations: {np.mean(training_iterations):{n_precision}f} +/- '\
+				#      f'{np.std(training_iterations):{n_precision}f}\n'
+				# s += f'\tdurations: {np.mean(durations):{n_precision}f} +/- ' \
+				#      f'{np.std(durations):{n_precision}f}\n'
 			else:
 				results_avg[split] = {'Iterations': ('', '')}
 			for metric_name in metric_names:
@@ -257,7 +257,7 @@ def parser_history_topk(args):
 					score_mean = np.nan
 					score_std = np.nan
 				results_avg[split][metric_name] = (score_mean, score_std)
-				# s += f'\t{metric_name}: {score_mean:.2f} +/- {score_std:.2f}\n'
+				# s += f'\t{metric_name}: {score_mean:{n_precision}f} +/- {score_std:{n_precision}f}\n'
 
 			# s += f'initial_centroids:\n{initial_centroids}\n'
 			# s += f'final_centroids:\n{final_centroids}\n'
@@ -265,7 +265,7 @@ def parser_history_topk(args):
 			# s += 'final centroids distribution: \n'
 			# ss_ = sorted(collections.Counter(final_centroids_lst).items(), key=lambda kv: kv[1], reverse=True)
 			# tot_centroids = len(final_centroids_lst)
-			# s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:.2f}% - ({cnt_}/{tot_centroids})' for
+			# s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:{n_precision}f}% - ({cnt_}/{tot_centroids})' for
 			#                  cen_, cnt_ in ss_)
 	except Exception as e:
 		warnings.warn(f'Parser Error: {e}')
@@ -318,10 +318,10 @@ def parser_history2(args):
 				                        'initial_centroids': initial_centroids,
 				                        'final_centroids': final_centroids,
 				                        'final_centroids_lst': final_centroids_lst}
-				# s += f'\titerations: {np.mean(training_iterations):.2f} +/- '\
-				#      f'{np.std(training_iterations):.2f}\n'
-				# s += f'\tdurations: {np.mean(durations):.2f} +/- ' \
-				#      f'{np.std(durations):.2f}\n'
+				# s += f'\titerations: {np.mean(training_iterations):{n_precision}f} +/- '\
+				#      f'{np.std(training_iterations):{n_precision}f}\n'
+				# s += f'\tdurations: {np.mean(durations):{n_precision}f} +/- ' \
+				#      f'{np.std(durations):{n_precision}f}\n'
 			else:
 				results_detail[split] = {'Iterations': ('', '')}
 			for metric_name in metric_names:
@@ -432,10 +432,10 @@ def save2xls(workbook, worksheet, column_idx, args, results_avg, metric_names):
 	# 				final_centroids_lst += ['(' + ', '.join(f'{v:.5f}' for v in vs) + ')' for vs in history[seed]['final_centroids']]
 	# 			durations = [history[seed]['duration'] for seed in SEEDS]
 	# 			results_avg[split] = {'Iterations': (np.mean(training_iterations), np.std(training_iterations))}
-	# 			s += f'\titerations: {np.mean(training_iterations):.2f} +/- '\
-	# 			     f'{np.std(training_iterations):.2f}\n'
-	# 			s += f'\tdurations: {np.mean(durations):.2f} +/- ' \
-	# 			     f'{np.std(durations):.2f}\n'
+	# 			s += f'\titerations: {np.mean(training_iterations):{n_precision}f} +/- '\
+	# 			     f'{np.std(training_iterations):{n_precision}f}\n'
+	# 			s += f'\tdurations: {np.mean(durations):{n_precision}f} +/- ' \
+	# 			     f'{np.std(durations):{n_precision}f}\n'
 	# 		else:
 	# 			results_avg[split] = {'Iterations': ('', '')}
 	# 		for metric_name in metric_names:
@@ -454,7 +454,7 @@ def save2xls(workbook, worksheet, column_idx, args, results_avg, metric_names):
 	# 				score_mean = np.nan
 	# 				score_std = np.nan
 	# 			results_avg[split][metric_name] = (score_mean, score_std)
-	# 			s += f'\t{metric_name}: {score_mean:.2f} +/- {score_std:.2f}\n'
+	# 			s += f'\t{metric_name}: {score_mean:{n_precision}f} +/- {score_std:{n_precision}f}\n'
 	#
 	# 		s += f'initial_centroids:\n{initial_centroids}\n'
 	# 		s += f'final_centroids:\n{final_centroids}\n'
@@ -462,7 +462,7 @@ def save2xls(workbook, worksheet, column_idx, args, results_avg, metric_names):
 	# 		s += 'final centroids distribution: \n'
 	# 		ss_ = sorted(collections.Counter(final_centroids_lst).items(), key=lambda kv: kv[1], reverse=True)
 	# 		tot_centroids = len(final_centroids_lst)
-	# 		s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:.2f}% - ({cnt_}/{tot_centroids})' for
+	# 		s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:{n_precision}f}% - ({cnt_}/{tot_centroids})' for
 	# 		                 cen_, cnt_ in ss_)
 	#
 	# 		data = s
@@ -485,10 +485,10 @@ def save2xls(workbook, worksheet, column_idx, args, results_avg, metric_names):
 			# if split == 'train':
 			# 	Iterations = results_avg[split]['Iterations']
 			# 	durations = results_avg[split]['durations']
-			# 	s += f'\titerations: {Iterations[0]:.2f} +/- '\
-			# 	     f'{Iterations[1]:.2f}\n'
-			# 	s += f'\tdurations: {durations[0]:.2f} +/- ' \
-			# 	     f'{durations[1]:.2f}\n'
+			# 	s += f'\titerations: {Iterations[0]:{n_precision}f} +/- '\
+			# 	     f'{Iterations[1]:{n_precision}f}\n'
+			# 	s += f'\tdurations: {durations[0]:{n_precision}f} +/- ' \
+			# 	     f'{durations[1]:{n_precision}f}\n'
 			# else:
 			# 	s += '\n'
 			for metric_name in metric_names:
@@ -510,7 +510,7 @@ def save2xls(workbook, worksheet, column_idx, args, results_avg, metric_names):
 
 				else:
 					score_mean, score_std = results_avg[split][metric_name]
-					s += f'\t{metric_name}: {score_mean:.2f} +/- {score_std:.2f}\n'
+					s += f'\t{metric_name}: {score_mean:{n_precision}f} +/- {score_std:{n_precision}f}\n'
 
 			worksheet.set_row(row, 400)  # set row height to 100
 			worksheet.write(row, column_idx, s)
@@ -528,7 +528,7 @@ def save2xls(workbook, worksheet, column_idx, args, results_avg, metric_names):
 			s += 'final centroids distribution: \n'
 			ss_ = sorted(collections.Counter(final_centroids_lst).items(), key=lambda kv: kv[1], reverse=True)
 			tot_centroids = len(final_centroids_lst)
-			s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:.2f}% - ({cnt_}/{tot_centroids})' for
+			s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:{n_precision}f}% - ({cnt_}/{tot_centroids})' for
 			                 cen_, cnt_ in ss_)
 
 			data = s
@@ -617,7 +617,7 @@ def save2csv(csv_f, idx_alg, args, results_avg, metric_names):
 					continue
 				try:
 					score_mean, score_std = results_avg[split][metric_name]
-					s.append(f'{score_mean:.2f} +/- {score_std:.2f}')
+					s.append(f'{score_mean:{n_precision}f} +/- {score_std:{n_precision}f}')
 				except Exception as e:
 					s.append(f'nan')
 			s = ','.join(s)
@@ -672,7 +672,7 @@ def main2():
 	tot_cnt = 0
 	sheet_names = set()
 	dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS']
-	dataset_names = ['NBAIOT']
+	dataset_names = ['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT', 'MNIST']  #
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
@@ -798,7 +798,8 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5, IS_PCA = Fals
 	# dataset_names = ['NBAIOT',  'FEMNIST', 'SENT140', '3GAUSSIANS', '10GAUSSIANS'] # ['NBAIOT'] # '3GAUSSIANS', '10GAUSSIANS', 'NBAIOT',  'FEMNIST', 'SENT140'
 	dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK','GASSENSOR','SELFBACK', 'MNIST']  #
 	dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT','DRYBEAN', 'GASSENSOR','SELFBACK']  #
-	dataset_names = ['3GAUSSIANS', 'NBAIOT','MNIST'] #
+	# dataset_names = ['3GAUSSIANS','10GAUSSIANS', 'NBAIOT','MNIST'] #
+	dataset_names = [ '3GAUSSIANS', '10GAUSSIANS', 'NBAIOT', 'MNIST',] # 'NBAIOT', '3GAUSSIANS'
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
@@ -813,6 +814,19 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5, IS_PCA = Fals
 	sheet_names = set()
 	datasets = get_datasets_config_lst(dataset_names)
 	for dataset in datasets:
+		args1_ = copy.deepcopy(args)
+		if dataset['name'] == '3GAUSSIANS' and IS_PCA == True: continue
+		if dataset['name'] == '10GAUSSIANS' and IS_PCA == True: continue
+		if dataset['name'] == 'MNIST':
+			if args1_['IS_PCA'] == True:
+				args1_['IS_PCA'] = 'CNN'
+			else:
+				continue
+		# 	continue # we already have the results
+		# # if dataset['name'] == 'MNIST' and args['IS_PCA'] == False:
+		# 	continue
+		if dataset['name'] == 'NBAIOT' and args1_['IS_PCA'] == True:
+			continue
 		algorithms = get_algorithms_config_lst(py_names, dataset['n_clusters'])
 		for idx_alg, algorithm in enumerate(algorithms):
 			print(f'\n*** {tot_cnt}th experiment ***:', dataset['name'], algorithm['py_name'])
@@ -820,7 +834,7 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5, IS_PCA = Fals
 			for i_repeat in range(N_REPEATS):
 				seed_data = i_repeat * 10   # data seed
 				# print('\n***', dataset['name'], i_repeat, seed_data)
-				args1 = copy.deepcopy(args)
+				args1 = copy.deepcopy(args1_)
 				SEED = args1['SEED'] # model seed
 				args1['SEED_DATA'] = seed_data
 				args1['DATASET']['name'] = dataset['name']
@@ -899,10 +913,17 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE = 5, IS_PCA = Fals
 				                                                           ]
 
 				results_avg,results_detail = parser_history(Args_lst)
-				save2xls(workbook, worksheet, idx_alg, args2, results_avg, metric_names)
-				# # only save the top 2 results
-				# results_avg = parser_history_topk(args2)
-				save2csv(csv_f, idx_alg, args2, results_avg, metric_names)
+				try:
+					save2xls(workbook, worksheet, idx_alg, args2, results_avg, metric_names)
+				except Exception as e:
+					traceback.print_exc()
+				try:
+					# # only save the top 2 results
+					# results_avg = parser_history_topk(args2)
+
+					save2csv(csv_f, idx_alg, args2, results_avg, metric_names)
+				except Exception as e:
+					traceback.print_exc()
 				# save results detail
 				save2csv2(csv_f2, idx_alg, args2, results_detail, metric_names)
 			except Exception as e:

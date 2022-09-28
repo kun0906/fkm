@@ -35,90 +35,90 @@ metric2abbrv = {'iterations': 'Training iterations',
                 'euclidean': 'Euclidean distance'
                 }
 
-
-def save2csv(df, table_l2, py_name, case, column_idx, client_epochs):
-	print(py_name, case, column_idx, client_epochs)
-	dataset = case['dataset']
-	data_details = case['data_details']
-	algorithm = case['algorithm']
-	params = get_experiment_params(p0=dataset, p1=data_details, p2=algorithm, client_epochs=client_epochs,
-	                               p3=py_name)
-	# pprint(params)
-	out_dir = params['out_dir']
-	print(f'out_dir: {out_dir}')
-	if not os.path.exists(out_dir):
-		os.makedirs(out_dir)
-
-	try:
-		# read scores from out.txt
-		server_init_centroids = params['server_init_centroids']
-		client_init_centroids = params['client_init_centroids']
-		if False:
-			print('deprecated')
-			out_txt = os.path.join(out_dir, f'varied_clients-Server_{server_init_centroids}-'
-			                                f'Client_{client_init_centroids}.txt')
-			with open(out_txt, 'r') as f:
-				data = json.load(f)
-			s = ' '
-			for k, vs in data.items():
-				for split in vs.keys():
-					s += f'{split}:\n'
-					for metric, score in vs[split].items():
-						s += f'\t{metric}: ' + '+/-'.join(f'{v:.2f}' for v in score) + '\n'
-					s += '\n'
-		else:
-			out_dat = os.path.join(out_dir, f'varied_clients-Server_{server_init_centroids}-'
-			                                f'Client_{client_init_centroids}-histories.dat')
-			histories = load(out_dat)
-			for n_clients, history_res in histories.items():
-				results_avg = history_res['results_avg']
-				n_clients = history_res['n_clients']
-				results = history_res['history']['results']
-				s = ''
-				c1 = ''
-				training_iterations_lst = []
-				scores_lst = []
-				final_centroids_lst = []
-				for vs in results:
-					seed = vs['seed']
-					# print(f'seed: {seed}')
-					training_iterations_lst.append(vs['training_iterations'])
-					scores_lst.append(vs['scores'])
-				# final_centroids_lst += ['(' + ', '.join(f'{v:.5f}' for v in cen) + ')' for cen
-				#                         in vs['final_centroids'].tolist()]
-
-				for split in scores_lst[0].keys():  # ['train', 'test']
-					# s += f'{split}:\n'
-					# c1 += f'{split}:\n'
-					if split == 'train':
-						if column_idx == 0:
-							c1 += 'iterations\n'
-						s += f'{np.mean(training_iterations_lst):.2f} +/- ' \
-						     f'{np.std(training_iterations_lst):.2f}\n'
-					else:
-						c1 += 'iterations\n'
-						s += '\n'
-					for metric in scores_lst[0][split].keys():
-						metric_scores = [scores[split][metric] for scores in scores_lst]
-						if column_idx == 0:
-							c1 += f'{metric2abbrv[metric]}\n'
-						s += f'{np.mean(metric_scores):.2f} +/- {np.std(metric_scores):.2f}\n'
-				# s += '\n'
-
-				# # final centroids distribution
-				# s += 'final centroids distribution: \n'
-				# ss_ = sorted(collections.Counter(final_centroids_lst).items(), key=lambda kv: kv[1], reverse=True)
-				# tot_centroids = len(final_centroids_lst)
-				# s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:.2f}% - ({cnt_}/{tot_centroids})' for
-				#                  cen_, cnt_ in ss_)
-				if column_idx == 0:
-					df['metric'] = c1.split('\n')
-				df[algorithm2abbrv[algorithm]] = s.split('\n')
-				break
-	except Exception as e:
-		print(f'Error: {e}')
-		data = '-'
-
+#
+# def save2csv(df, table_l2, py_name, case, column_idx, client_epochs):
+# 	print(py_name, case, column_idx, client_epochs)
+# 	dataset = case['dataset']
+# 	data_details = case['data_details']
+# 	algorithm = case['algorithm']
+# 	params = get_experiment_params(p0=dataset, p1=data_details, p2=algorithm, client_epochs=client_epochs,
+# 	                               p3=py_name)
+# 	# pprint(params)
+# 	out_dir = params['out_dir']
+# 	print(f'out_dir: {out_dir}')
+# 	if not os.path.exists(out_dir):
+# 		os.makedirs(out_dir)
+#
+# 	try:
+# 		# read scores from out.txt
+# 		server_init_centroids = params['server_init_centroids']
+# 		client_init_centroids = params['client_init_centroids']
+# 		if False:
+# 			print('deprecated')
+# 			out_txt = os.path.join(out_dir, f'varied_clients-Server_{server_init_centroids}-'
+# 			                                f'Client_{client_init_centroids}.txt')
+# 			with open(out_txt, 'r') as f:
+# 				data = json.load(f)
+# 			s = ' '
+# 			for k, vs in data.items():
+# 				for split in vs.keys():
+# 					s += f'{split}:\n'
+# 					for metric, score in vs[split].items():
+# 						s += f'\t{metric}: ' + '+/-'.join(f'{v:.2f}' for v in score) + '\n'
+# 					s += '\n'
+# 		else:
+# 			out_dat = os.path.join(out_dir, f'varied_clients-Server_{server_init_centroids}-'
+# 			                                f'Client_{client_init_centroids}-histories.dat')
+# 			histories = load(out_dat)
+# 			for n_clients, history_res in histories.items():
+# 				results_avg = history_res['results_avg']
+# 				n_clients = history_res['n_clients']
+# 				results = history_res['history']['results']
+# 				s = ''
+# 				c1 = ''
+# 				training_iterations_lst = []
+# 				scores_lst = []
+# 				final_centroids_lst = []
+# 				for vs in results:
+# 					seed = vs['seed']
+# 					# print(f'seed: {seed}')
+# 					training_iterations_lst.append(vs['training_iterations'])
+# 					scores_lst.append(vs['scores'])
+# 				# final_centroids_lst += ['(' + ', '.join(f'{v:.5f}' for v in cen) + ')' for cen
+# 				#                         in vs['final_centroids'].tolist()]
+#
+# 				for split in scores_lst[0].keys():  # ['train', 'test']
+# 					# s += f'{split}:\n'
+# 					# c1 += f'{split}:\n'
+# 					if split == 'train':
+# 						if column_idx == 0:
+# 							c1 += 'iterations\n'
+# 						s += f'{np.mean(training_iterations_lst):.2f} +/- ' \
+# 						     f'{np.std(training_iterations_lst):.2f}\n'
+# 					else:
+# 						c1 += 'iterations\n'
+# 						s += '\n'
+# 					for metric in scores_lst[0][split].keys():
+# 						metric_scores = [scores[split][metric] for scores in scores_lst]
+# 						if column_idx == 0:
+# 							c1 += f'{metric2abbrv[metric]}\n'
+# 						s += f'{np.mean(metric_scores):.2f} +/- {np.std(metric_scores):.2f}\n'
+# 				# s += '\n'
+#
+# 				# # final centroids distribution
+# 				# s += 'final centroids distribution: \n'
+# 				# ss_ = sorted(collections.Counter(final_centroids_lst).items(), key=lambda kv: kv[1], reverse=True)
+# 				# tot_centroids = len(final_centroids_lst)
+# 				# s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:.2f}% - ({cnt_}/{tot_centroids})' for
+# 				#                  cen_, cnt_ in ss_)
+# 				if column_idx == 0:
+# 					df['metric'] = c1.split('\n')
+# 				df[algorithm2abbrv[algorithm]] = s.split('\n')
+# 				break
+# 	except Exception as e:
+# 		print(f'Error: {e}')
+# 		data = '-'
+#
 
 def main(N_REPEATS=1, dataset_name ='', OVERWRITE=True, IS_DEBUG=False, VERBOSE=5, IS_PCA=False, IS_REMOVE_OUTLIERS=False):
 	# get default config.yaml
@@ -222,14 +222,14 @@ def main(N_REPEATS=1, dataset_name ='', OVERWRITE=True, IS_DEBUG=False, VERBOSE=
 		for i, csv_file in enumerate(csv_files):
 			if i == 0:
 				head = r"""
-\begin{tabular}{|l|l|g|l|l|G|G|} 
+\begin{tabular}{|l|c|g|c|c|G|G|} 
 \toprule
-Percent ($P$) &  Metrics  & Server-Random  & Average-Random & Average-KM++   & Greedy-Random  & Greedy-KM++    \\ 
+Percent ($P$) &  Metrics  & Server-Initialized  & Average-Random & Average-KM++   & Greedy-Random  & Greedy-KM++    \\ 
 \hline\hline
 """
 				f.write(head)
 			values = pd.read_csv(csv_file).iloc[:, [0, 3, 4, 5, 6, 7]].values
-			Ps = [0, 0.1, 0.3, 0.5]
+			Ps = ["0", "10\%", "30\%", "50\%"]
 			for j in range(len(values)):
 				if j == 0: continue
 				if j == 1:

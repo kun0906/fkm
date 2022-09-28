@@ -20,7 +20,7 @@ from fkm import config
 from fkm.main_all import get_datasets_config_lst, get_algorithms_config_lst
 from fkm.utils.utils_func import load
 
-n_precision = 10
+n_precision = 2
 
 def _parser_history(args):
 	OUT_DIR = args['OUT_DIR']
@@ -510,7 +510,7 @@ def save2xls(workbook, worksheet, column_idx, args, results_avg, metric_names):
 
 				else:
 					score_mean, score_std = results_avg[split][metric_name]
-					s += f'\t{metric_name}: {score_mean:{n_precision}f} +/- {score_std:{n_precision}f}\n'
+					s += f'\t{metric_name}: {score_mean:.{n_precision}f} +/- {score_std:.{n_precision}f}\n'
 
 			worksheet.set_row(row, 400)  # set row height to 100
 			worksheet.write(row, column_idx, s)
@@ -528,7 +528,7 @@ def save2xls(workbook, worksheet, column_idx, args, results_avg, metric_names):
 			s += 'final centroids distribution: \n'
 			ss_ = sorted(collections.Counter(final_centroids_lst).items(), key=lambda kv: kv[1], reverse=True)
 			tot_centroids = len(final_centroids_lst)
-			s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:{n_precision}f}% - ({cnt_}/{tot_centroids})' for
+			s += '\t\n'.join(f'{cen_}: {cnt_ / tot_centroids * 100:.{n_precision}f}% - ({cnt_}/{tot_centroids})' for
 			                 cen_, cnt_ in ss_)
 
 			data = s
@@ -617,7 +617,7 @@ def save2csv(csv_f, idx_alg, args, results_avg, metric_names):
 					continue
 				try:
 					score_mean, score_std = results_avg[split][metric_name]
-					s.append(f'{score_mean:{n_precision}f} +/- {score_std:{n_precision}f}')
+					s.append(f'{score_mean:.{n_precision}f} +/- {score_std:.{n_precision}f}')
 				except Exception as e:
 					s.append(f'nan')
 			s = ','.join(s)

@@ -1,3 +1,9 @@
+V0.2.4: Generate dataset for each algorithm
+
+1. Generate dataset for each algorithm for safe even it's very slow. 
+2. Use sample_fraction = 1 for all experiments
+3. Add ignore.py and still need to double-check.
+
 V0.2.3-5.1: Print each client data distribution for debugging. 
 
 

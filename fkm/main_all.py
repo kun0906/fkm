@@ -36,6 +36,23 @@ dmesg -T| grep -E -i -B100 'killed process'
 
 PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 main_all.py
 
+
+# For MNIST with GPU (more can be seen in datasets/mnist.py)
+	ssh ky8517@tigergpu.princeton.edu
+	# tmux new -s fkm
+	tmux attach -t fkm
+	srun --nodes=1 --gres=gpu:1 --mem=128G --ntasks-per-node=1 --time=20:00:00 --pty bash -i
+	cd /scratch/gpfs/ky8517/fkm/fkm
+	module load anaconda3/2021.11
+	source activate tf2_10_0-gpu-py397
+	module load cudatoolkit/11.2
+	module load cudnn/cuda-11.x/8.2.0
+	./sbatch
+
+	PYTHONPATH='..' PYTHONUNBUFFERED=TRUE python3 datasets/mnist.py
+
+sacct -X --format="JobID, JobName%100,State"
+
 """
 # Email: kun.bj@outllok.com
 import copy
@@ -807,7 +824,7 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOS
 	# dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK','GASSENSOR','SELFBACK', 'MNIST']  #
 	# dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT','DRYBEAN', 'GASSENSOR','SELFBACK']  #
 	# dataset_names = ['SELFBACK', 'GASSENSOR', 'MNIST', 'DRYBEAN'] # 'NBAIOT', '3GAUSSIANS'
-	dataset_names = ['10GAUSSIANS','3GAUSSIANS',]
+	dataset_names = ['MNIST']
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
@@ -881,18 +898,21 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOS
 				args2['OUT_DIR'] = os.path.join(OUT_DIR, args2['DATASET']['name'], f'{dataset_detail}',
 				                                args2['ALGORITHM']['py_name'], args2['ALGORITHM']['detail'])
 
+				if os.path.exists(args2['OUT_DIR']):
+					shutil.rmtree(args2['OUT_DIR'])
+					# pass
+					# shutil.rmtree(os.path.join(OUT_DIR, args2['DATASET']['name'], f'{dataset_detail}'))
+				else:
+					os.makedirs(args2['OUT_DIR'])
+
 				### generate dataset first to save time. Be careful when muliti-processes are submitted to the server.
 				# TODO: update data generation in a lazy way.
-				# if IS_GEN_DATA and i_alg == 0:   # for different algorithms, please generate its own dataset for safe.
+				# if IS_GEN_DATA and i_alg == 0:   if use this condition, it only generetate centralized data with ratio =0.0.  For other ratios, just be ignored.
+				# for different algorithms, please generate its own dataset for safe.
 				args2['data_file'] = generate_dataset(args2)
 				# print(f'arg2.data_file:', args2['data_file'])
 				# if IS_GEN_DATA: continue
 
-				if os.path.exists(args2['OUT_DIR']):
-					shutil.rmtree(args2['OUT_DIR'])
-					# shutil.rmtree(os.path.join(OUT_DIR, args2['DATASET']['name'], f'{dataset_detail}'))
-				else:
-					os.makedirs(args2['OUT_DIR'])
 				new_config_file = os.path.join(args2['OUT_DIR'], 'config_file.yaml')
 				if VERBOSE >= 2:
 					pprint(new_config_file)
@@ -925,6 +945,5 @@ if __name__ == '__main__':
 		for IS_PCA in [False, True]:
 			# you should run twice: the first time is to generate data and the second one is to run the models to avoid multi-processes operate on the same file.
 			# the first time is to generate data
-			main(N_REPEATS=50, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOSE=3, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)
 			# train and evalate the models. Note that IS_GEN_DATA = False  and OVERWRITE = False
-			main(N_REPEATS=50, OVERWRITE=False, IS_DEBUG=False, IS_GEN_DATA = False, VERBOSE=3, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)
+			main(N_REPEATS=50, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = False, VERBOSE=3, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)

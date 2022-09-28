@@ -1072,9 +1072,9 @@ def gaussian3_diff_sigma_n(args, random_state=42, **kwargs):
             raise ValueError
         elif ratio == 0:
             pass
-        elif ('centralized' in args['ALGORITHM']['py_name']):
-            # there should have not effect for centralized kmeans for different ratios.
-            pass
+        # elif ('centralized' in args['ALGORITHM']['py_name']):
+        #     # there should have not effect for centralized kmeans for different ratios.
+        #     pass
         else:
             new_client_train_x = []
             new_client_train_y = []

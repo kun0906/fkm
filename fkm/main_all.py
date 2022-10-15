@@ -824,7 +824,7 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOS
 	# dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK','GASSENSOR','SELFBACK', 'MNIST']  #
 	# dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT','DRYBEAN', 'GASSENSOR','SELFBACK']  #
 	# dataset_names = ['SELFBACK', 'GASSENSOR', 'MNIST', 'DRYBEAN'] # 'NBAIOT', '3GAUSSIANS'
-	dataset_names = ['MNIST']
+	dataset_names = ['3GAUSSIANS', '10GAUSSIANS']
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension

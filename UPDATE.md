@@ -1,3 +1,9 @@
+V0.2.5: Add latex_plot_datasets for synthetic datasets
+
+1. Add score_comparison.py for DB score and Silhouette score and ARI
+2. Add latex_plot datasets for synthetic datasets
+
+
 V0.2.4: Generate dataset for each algorithm
 
 1. Generate dataset for each algorithm for safe even it's very slow. 

@@ -1,3 +1,12 @@
+V0.2.6: Add different Ks and corresponding collecting functions
+
+1. Add different Ks e.g., [1, 2,3, ..., 10]
+2. Correct the shape error. 
+   i.e., if self.centroids.shape != self.true_centroids[split].shape:
+         continue
+3. Add collect_K_results and collect_table_K_results. 
+
+
 V0.2.5: Add latex_plot_datasets for synthetic datasets
 
 1. Add score_comparison.py for DB score and Silhouette score and ARI

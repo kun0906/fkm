@@ -806,7 +806,7 @@ def get_algorithms_config_lst(py_names, n_clusters=2):
 	return algorithms
 
 
-def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOSE = 5, IS_PCA = True, IS_REMOVE_OUTLIERS = True):
+def main(N_REPEATS=1, K=2, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOSE = 5, IS_PCA = True, IS_REMOVE_OUTLIERS = True):
 	# get default config.yaml
 	config_file = 'config.yaml'
 	args = config.load(config_file)
@@ -824,7 +824,7 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOS
 	# dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK','GASSENSOR','SELFBACK', 'MNIST']  #
 	# dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT','DRYBEAN', 'GASSENSOR','SELFBACK']  #
 	# dataset_names = ['SELFBACK', 'GASSENSOR', 'MNIST', 'DRYBEAN'] # 'NBAIOT', '3GAUSSIANS'
-	dataset_names = ['3GAUSSIANS', '10GAUSSIANS']
+	dataset_names = ['3GAUSSIANS']
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
@@ -839,6 +839,7 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOS
 	]
 	datasets = get_datasets_config_lst(dataset_names)
 	for dataset in datasets:
+		dataset['n_clusters'] = K
 		args1_ = copy.deepcopy(args)
 		if dataset['name'] == '3GAUSSIANS' and IS_PCA == True: continue
 		if dataset['name'] == '10GAUSSIANS' and IS_PCA == True: continue
@@ -852,7 +853,8 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOS
 		# 	continue
 		if dataset['name'] == 'NBAIOT' and args1_['IS_PCA'] == True:
 			continue
-		algorithms = get_algorithms_config_lst(py_names, dataset['n_clusters'])
+		# algorithms = get_algorithms_config_lst(py_names, dataset['n_clusters'])
+		algorithms = get_algorithms_config_lst(py_names, n_clusters= dataset['n_clusters'])
 		for i_alg, algorithm in enumerate(algorithms):
 			print(f'\n*** {tot_cnt}th experiment ***:', dataset['name'], algorithm['py_name'])
 			Args_lst = []
@@ -938,12 +940,13 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, VERBOS
 
 
 if __name__ == '__main__':
-	# main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5, IS_PCA = False, IS_REMOVE_OUTLIERS = False)
+	# main(N_REPEATS=1, K=5, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5, IS_PCA = False, IS_REMOVE_OUTLIERS = False)
 	# exit()
 
 	for IS_REMOVE_OUTLIERS in [False]:
 		for IS_PCA in [False, True]:
-			# you should run twice: the first time is to generate data and the second one is to run the models to avoid multi-processes operate on the same file.
-			# the first time is to generate data
-			# train and evalate the models. Note that IS_GEN_DATA = False  and OVERWRITE = False
-			main(N_REPEATS=50, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = False, VERBOSE=3, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)
+			for K in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+				# you should run twice: the first time is to generate data and the second one is to run the models to avoid multi-processes operate on the same file.
+				# the first time is to generate data
+				# train and evalate the models. Note that IS_GEN_DATA = False  and OVERWRITE = False
+				main(N_REPEATS=50, K = K, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = False, VERBOSE=3, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)

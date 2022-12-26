@@ -737,7 +737,7 @@ def obtain_true_centroids(X_dict, y_dict, splits=['train', 'test'], params=None)
         # print(centroids.round(3))
         # print(split, x.shape, len(x[0]), n_clusters, centroids.shape, params['N_CLUSTERS'])
         print(f'min: {np.min(x)} and max: {np.max(x)}')
-        all_centroids[split] = centroids[:params['N_CLUSTERS']]
+        all_centroids[split] = centroids #  centroids[:params['N_CLUSTERS']]
     return all_centroids
 
 

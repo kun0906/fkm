@@ -101,6 +101,8 @@ class KMeans:
                 )
                 centroids_diff = {}
                 for split in splits:
+                    if self.centroids.shape != self.true_centroids[split].shape:
+                        continue
                     centroids_diff[split] = self.centroids - self.true_centroids[split]
                 centroids_update = self.centroids-np.zeros((self.n_clusters, self.dim))  # centroids(t+1) - centroid(t)
                 self.history.append({'iteration': iteration, 'centroids': self.centroids, 'scores': scores,
@@ -168,6 +170,8 @@ class KMeans:
             )
             centroids_diff = {}
             for split in splits:
+                if self.centroids.shape != self.true_centroids[split].shape:
+                    continue
                 centroids_diff[split] = self.centroids - self.true_centroids[split]
             self.history.append({'iteration': iteration, 'centroids': self.centroids, 'scores': scores,
                                  'centroids_update': centroids_update, 'centroids_diff': centroids_diff})

@@ -124,7 +124,8 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE=5, IS_PCA=False, I
 	# get default config.yaml
 	config_file = 'config.yaml'
 	args = config.load(config_file)
-	OUT_DIR = '~/Downloads'
+	# OUT_DIR = '~/Downloads'
+	OUT_DIR = './out'
 	SEPERTOR = args['SEPERTOR']
 	args['N_REPEATS'] = N_REPEATS
 	args['OVERWRITE'] = OVERWRITE
@@ -139,7 +140,7 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE=5, IS_PCA=False, I
 	                 'GASSENSOR', 'SELFBACK', 'MNIST']  #
 	dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT', 'DRYBEAN', 'GASSENSOR', 'SELFBACK']  #
 	dataset_names = ['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT', 'MNIST']  #
-	# dataset_names = ['MNIST',]
+	dataset_names = ['3GAUSSIANS',]
 	# dataset_names = ['SELFBACK', 'GASSENSOR', 'MNIST', 'DRYBEAN']  # 'NBAIOT', '3GAUSSIANS'
 	py_names = [
 		'centralized_kmeans',
@@ -190,7 +191,7 @@ def main(N_REPEATS=1, OVERWRITE=True, IS_DEBUG=False, VERBOSE=5, IS_PCA=False, I
 		dataset_detail = args1['DATASET']['detail']
 
 		args2 = copy.deepcopy(args1)
-		algorithm = {'IS_FEDERATED':False, 'server_init_method':'Random', 'client_init_method':None, 'py_name':None}
+		algorithm = {'IS_FEDERATED':False, 'server_init_method':'random', 'client_init_method':None, 'py_name':None}
 		args2['IS_FEDERATED'] = algorithm['IS_FEDERATED']
 		args2['ALGORITHM']['py_name'] = algorithm['py_name']
 		# initial_method = args2['ALGORITHM']['initial_method']

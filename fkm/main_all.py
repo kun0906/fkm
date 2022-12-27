@@ -503,13 +503,26 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 			# data_details_lst += tmp_list
 
 			tmp_list = []
-			N = 1000  # total cases: 9*7
-			for ratio in [0.0, 0.1, 0.3, 0.5]:  # ratios:
-				for n1 in [N]:
+			# N = 1000  # total cases: 9*7
+			# for ratio in [0.0, 0.1, 0.3, 0.5]:  # ratios:
+			# 	for n1 in [N]:
+			# 		for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+			# 			for n2 in [N]:
+			# 				for sigma2 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+			# 					for n3 in [N]:
+			# 						for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
+			# 							p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
+			# 							tmp_list.append((p1, n_clusters, n_clients))
+			#
+			# data_details_lst += tmp_list
+
+			tmp_list = []
+			for ratio in [0.0]:  # ratios:
+				for n1 in [50, 100, 500, 1000, 2000, 3000]:
 					for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
-						for n2 in [N]:
+						for n2 in [n1]:
 							for sigma2 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
-								for n3 in [N]:
+								for n3 in [n1]:
 									for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
 										p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
 										tmp_list.append((p1, n_clusters, n_clients))
@@ -839,7 +852,7 @@ def main(N_REPEATS=1, K=2, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, V
 	]
 	datasets = get_datasets_config_lst(dataset_names)
 	for dataset in datasets:
-		dataset['n_clusters'] = K
+		# dataset['n_clusters'] = K     # for different K
 		args1_ = copy.deepcopy(args)
 		if dataset['name'] == '3GAUSSIANS' and IS_PCA == True: continue
 		if dataset['name'] == '10GAUSSIANS' and IS_PCA == True: continue
@@ -940,13 +953,23 @@ def main(N_REPEATS=1, K=2, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, V
 
 
 if __name__ == '__main__':
-	# main(N_REPEATS=1, K=5, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5, IS_PCA = False, IS_REMOVE_OUTLIERS = False)
+	# main(N_REPEATS=1, K=1, OVERWRITE=True, IS_DEBUG=True, VERBOSE=5, IS_PCA = False, IS_REMOVE_OUTLIERS = False)
 	# exit()
 
 	for IS_REMOVE_OUTLIERS in [False]:
 		for IS_PCA in [False, True]:
-			for K in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
-				# you should run twice: the first time is to generate data and the second one is to run the models to avoid multi-processes operate on the same file.
-				# the first time is to generate data
-				# train and evalate the models. Note that IS_GEN_DATA = False  and OVERWRITE = False
-				main(N_REPEATS=50, K = K, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = False, VERBOSE=3, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)
+			# you should run twice: the first time is to generate data and the second one is to run the models to avoid multi-processes operate on the same file.
+			# the first time is to generate data
+			# train and evalate the models. Note that IS_GEN_DATA = False  and OVERWRITE = False
+			main(N_REPEATS=50, K = None, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = False, VERBOSE=3, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)
+
+
+	# for IS_REMOVE_OUTLIERS in [False]:
+	# 	for IS_PCA in [False, True]:
+	# 		for K in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]: # for different K, you need set: dataset['n_clusters'] = K in main function
+	# 			# you should run twice: the first time is to generate data and the second one is to run the models to avoid multi-processes operate on the same file.
+	# 			# the first time is to generate data
+	# 			# train and evalate the models. Note that IS_GEN_DATA = False  and OVERWRITE = False
+	# 			main(N_REPEATS=50, K = K, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = False, VERBOSE=3, IS_PCA = IS_PCA, IS_REMOVE_OUTLIERS = IS_REMOVE_OUTLIERS)
+	#
+	#

@@ -1,3 +1,11 @@
+V0.2.7: Add different size of 3Gaussians
+
+1. Add n1 = [50, 100, 500, 1000, 2000, 3000]:
+2. Update the collect_results.py and collect_table_results.py
+
+
+
+
 V0.2.6: Add different Ks and corresponding collecting functions
 
 1. Add different Ks e.g., [1, 2,3, ..., 10]

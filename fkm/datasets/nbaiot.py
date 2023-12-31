@@ -10,6 +10,8 @@ Data Set Information:
 -- For each of the 9 IoT devices we trained and optimized a deep autoencoder on 2/3 of its benign data (i.e., the training set of each device). This was done to capture normal network traffic patterns.
 -- The test data of each device comprised of the remaining 1/3 of benign data plus all the malicious data. On each test set we applied the respective trained (deep) autoencoder as an anomaly detector. The detection of anomalies (i.e., the cyberattacks launched from each of the above IoT devices) concluded with 100% TPR.
 
+with 115 features/dimensions
+after PCA: 16 dimensions
 
 https://archive.ics.uci.edu/ml/datasets/detection_of_IoT_botnet_attacks_N_BaIoT#
 
@@ -500,7 +502,7 @@ def nbaiot_C_2_diff_sigma_n(args, random_state=42):
             pca = sklearn.decomposition.PCA(n_components=0.95)
             pca.fit(X)
             print(f'pca.explained_variance_ratio_:{pca.explained_variance_ratio_}')
-            X = pca.transform(X)
+            X = pca.transform(X)    # dim = 16 after PCA
             with open(out_file, 'wb') as f:
                 pickle.dump((X, y), f)
         else:

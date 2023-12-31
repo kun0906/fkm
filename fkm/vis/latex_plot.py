@@ -619,7 +619,8 @@ if __name__ == '__main__':
 	args = config.load(config_file)
 
 	# in_dir = os.path.abspath('~/Downloads/xlsx')
-	IN_DIR = os.path.expanduser('~/Downloads/xlsx')
+	IN_DIR = os.path.expanduser('out/xlsx')
+	# IN_DIR = os.path.expanduser('~/Downloads/xlsx')
 	OUT_DIR = f'{IN_DIR}/latex_plot/'
 	N_REPEATS =  50 #   args['N_REPEATS']
 	TOLERANCE = args['TOLERANCE']

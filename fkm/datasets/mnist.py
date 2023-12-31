@@ -3,6 +3,9 @@
 	2. https://s3.amazonaws.com/nist-srd/SD19/1stEditionUserGuide.pdf
 		(Introduce MNIST details)
 
+original data: 784 dimensions
+After VGG16: 100 dimensions
+After PCA:331 dimensions
 """
 import collections
 import copy

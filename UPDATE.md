@@ -1,9 +1,13 @@
+V0.2.8: add the evolution of centroids. 
+
+1. add main_single_demo.py to generate single result.
+2. add plot_evolution_centroids.py
+
+
 V0.2.7: Add different size of 3Gaussians
 
 1. Add n1 = [50, 100, 500, 1000, 2000, 3000]:
 2. Update the collect_results.py and collect_table_results.py
-
-
 
 
 V0.2.6: Add different Ks and corresponding collecting functions

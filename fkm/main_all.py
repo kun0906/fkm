@@ -503,31 +503,31 @@ def get_datasets_config_lst(dataset_names=['3GAUSSIANS', '10GAUSSIANS', 'NBAIOT'
 			# data_details_lst += tmp_list
 
 			tmp_list = []
-			# N = 1000  # total cases: 9*7
-			# for ratio in [0.0, 0.1, 0.3, 0.5]:  # ratios:
-			# 	for n1 in [N]:
-			# 		for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
-			# 			for n2 in [N]:
-			# 				for sigma2 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
-			# 					for n3 in [N]:
-			# 						for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
-			# 							p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
-			# 							tmp_list.append((p1, n_clusters, n_clients))
-			#
-			# data_details_lst += tmp_list
-
-			tmp_list = []
-			for ratio in [0.0]:  # ratios:
-				for n1 in [50, 100, 500, 1000, 2000, 3000]:
+			N = 1000  # total cases: 9*7
+			for ratio in [0.0, 0.1, 0.3, 0.5]:  # ratios:
+				for n1 in [N]:
 					for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
-						for n2 in [n1]:
+						for n2 in [N]:
 							for sigma2 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
-								for n3 in [n1]:
+								for n3 in [N]:
 									for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
 										p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
 										tmp_list.append((p1, n_clusters, n_clients))
 
 			data_details_lst += tmp_list
+
+			# tmp_list = []
+			# for ratio in [0.0]:  # ratios:
+			# 	for n1 in [50, 100, 500, 1000, 2000, 3000]:
+			# 		for sigma1 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+			# 			for n2 in [n1]:
+			# 				for sigma2 in ["0.1_0.1"]:  # sigma  = [[0.1, 0], [0, 0.1]]
+			# 					for n3 in [n1]:
+			# 						for sigma3 in ["1.0_0.1"]:  # sigma  = [[1, 0], [0, 0.1]]
+			# 							p1 = f'n1_{n1}-sigma1_{sigma1}+n2_{n2}-sigma2_{sigma2}+n3_{n3}-sigma3_{sigma3}:ratio_{ratio:.2f}:diff_sigma_n'
+			# 							tmp_list.append((p1, n_clusters, n_clients))
+			#
+			# data_details_lst += tmp_list
 
 			# tmp_list = []
 			# N = 5000  # total cases: 9*7
@@ -837,7 +837,8 @@ def main(N_REPEATS=1, K=2, OVERWRITE=True, IS_DEBUG=False, IS_GEN_DATA = True, V
 	# dataset_names = ['NBAIOT',  '3GAUSSIANS', '10GAUSSIANS', 'SENT140', 'FEMNIST', 'BITCOIN', 'CHARFONT', 'SELFBACK','GASSENSOR','SELFBACK', 'MNIST']  #
 	# dataset_names = ['MNIST', 'BITCOIN', 'CHARFONT','DRYBEAN', 'GASSENSOR','SELFBACK']  #
 	# dataset_names = ['SELFBACK', 'GASSENSOR', 'MNIST', 'DRYBEAN'] # 'NBAIOT', '3GAUSSIANS'
-	dataset_names = ['3GAUSSIANS']
+	dataset_names = ['10GAUSSIANS']
+	# dataset_names = ['MNIST']
 	py_names = [
 		'centralized_kmeans',
 		'federated_server_init_first',  # server first: min-max per each dimension
